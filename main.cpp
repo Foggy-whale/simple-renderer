@@ -1,7 +1,14 @@
-#include <random>
+#include <cmath>
+#include <tuple>
+#include "geometry.h"
+#include "model.h"
 #include "tgaimage.h"
 
+constexpr int width  = 800;
+constexpr int height = 800;
+
 constexpr TGAColor white   = {255, 255, 255, 255}; // attention, BGRA order
+constexpr TGAColor gray    = {200, 200, 200, 255}; 
 constexpr TGAColor green   = {  0, 255,   0, 255};
 constexpr TGAColor red     = {  0,   0, 255, 255};
 constexpr TGAColor blue    = {255, 128,  64, 255};
@@ -9,19 +16,33 @@ constexpr TGAColor yellow  = {  0, 200, 255, 255};
 
 void line(int x0, int y0, int x1, int y1, TGAImage &framebuffer, TGAColor color);
 
+std::tuple<int,int> project(vec3 v) { // First of all, (x,y) is an orthogonal projection of the vector (x,y,z).
+    return { (v.x + 1.) *  width / 2,   // Second, since the input models are scaled to have fit in the [-1,1]^3 world coordinates,
+             (v.y + 1.) * height / 2 }; // we want to shift the vector (x,y) and then scale it to span the entire screen.
+}
+
 int main(int argc, char** argv) {
-    constexpr int width  = 64;
-    constexpr int height = 64;
+    if (argc != 2) {
+        std::cerr << "Usage: " << argv[0] << " obj/model.obj" << std::endl;
+        return 1;
+    }
+
+    Model model(argv[1]);
     TGAImage framebuffer(width, height, TGAImage::RGB);
 
-    std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
-    for (int i = 0; i < (1 << 24); i++) {
-        int x0 = rng() % width, y0 = rng() % height;
-        int x1 = rng() % width, y1 = rng() % height;
-        line(x0, y0, x1, y1, framebuffer, {static_cast<uint8_t>(rng() % 256), 
-        static_cast<uint8_t>(rng() % 256), 
-        static_cast<uint8_t>(rng() % 256), 
-        static_cast<uint8_t>(rng() % 256)});
+    for (int i = 0; i < model.nfaces(); i++) { // iterate through all triangles
+        auto [ax, ay] = project(model.vert(i, 0));
+        auto [bx, by] = project(model.vert(i, 1));
+        auto [cx, cy] = project(model.vert(i, 2));
+        line(ax, ay, bx, by, framebuffer, red);
+        line(bx, by, cx, cy, framebuffer, red);
+        line(cx, cy, ax, ay, framebuffer, red);
+    }
+
+    for (int i = 0; i < model.nverts(); i++) { // iterate through all vertices
+        vec3 v = model.vert(i);            // get i-th vertex
+        auto [x, y] = project(v);          // project it to the screen
+        framebuffer.set(x, y, white);
     }
 
     framebuffer.write_tga_file("framebuffer.tga");
