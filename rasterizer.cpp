@@ -1,17 +1,21 @@
 #include <algorithm>
 #include "rasterizer.h"
 
-inline std::pair<vec2, vec2> find_bounding_box(vec2 v1, vec2 v2, vec2 v3) {
+static float cross_product(vec2 V1, vec2 V2) {
+    return V1.x * V2.y - V1.y * V2.x;
+}
+
+static std::pair<vec2, vec2> find_bounding_box(vec2 v1, vec2 v2, vec2 v3) {
     vec2 min = vec2(std::min({v1.x, v2.x, v3.x}), std::min({v1.y, v2.y, v3.y}));
     vec2 max = vec2(std::max({v1.x, v2.x, v3.x}), std::max({v1.y, v2.y, v3.y}));
     return {min, max};
 }
 
-inline bool inside_triangle(vec2 p, vec2 v1, vec2 v2, vec2 v3) {
+static bool inside_triangle(vec2 p, vec2 v1, vec2 v2, vec2 v3) {
     vec2 p1 = p - v1, p2 = p - v2, p3 = p - v3;
-    float s1 = p1.x * p2.y - p2.x * p1.y; // cross product of p1 and p2
-    float s2 = p2.x * p3.y - p3.x * p2.y; // cross product of p2 and p3
-    float s3 = p3.x * p1.y - p1.x * p3.y; // cross product of p3 and p1
+    float s1 = cross_product(p1, p2); // cross product of p1 and p2
+    float s2 = cross_product(p2, p3); // cross product of p2 and p3
+    float s3 = cross_product(p3, p1); // cross product of p3 and p1
     return (s1 >= 0 && s2 >= 0 && s3 >= 0) || (s1 <= 0 && s2 <= 0 && s3 <= 0);
 }
 void Rasterizer::line(vec2 v1, vec2 v2, TGAColor color) {
@@ -36,6 +40,9 @@ void Rasterizer::line(vec2 v1, vec2 v2, TGAColor color) {
 }
 
 void Rasterizer::triangle(vec2 v1, vec2 v2, vec2 v3, TGAColor color) {
+    float total_area = cross_product(v2 - v1, v3 - v1);
+    if (total_area < 1) return;
+
     auto [min, max] = find_bounding_box(v1, v2, v3);
     #pragma omp parallel for
     for (int x = min.x; x <= max.x; x++) {

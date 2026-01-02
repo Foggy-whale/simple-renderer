@@ -18,6 +18,10 @@ template<> struct vec<2> {
     float x = 0, y = 0;
     vec<2>() = default;
     vec<2> (float x, float y) : x(x), y(y) {}
+    vec<2>(std::initializer_list<float> l) { 
+        assert(l.size() == 2); 
+        x = *l.begin(), y = *(l.begin() + 1); 
+    }
 
     float& operator[](const int i)       { assert(i>=0 && i<2); return i ? y : x; }
     float  operator[](const int i) const { assert(i>=0 && i<2); return i ? y : x; }
@@ -31,6 +35,10 @@ template<> struct vec<3> {
     float x = 0, y = 0, z = 0;
     vec<3>() = default;
     vec<3> (float x, float y, float z) : x(x), y(y), z(z) {}
+    vec<3>(std::initializer_list<float> l) { 
+        assert(l.size() == 3); 
+        x = *l.begin(), y = *(l.begin() + 1), z = *(l.begin() + 2); 
+    }
 
     float& operator[](const int i)       { assert(i>=0 && i<3); return i ? (1==i ? y : z) : x; }
     float  operator[](const int i) const { assert(i>=0 && i<3); return i ? (1==i ? y : z) : x; }

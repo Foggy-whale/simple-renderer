@@ -64,6 +64,8 @@
         "utility": "cpp",
         "compare": "cpp",
         "type_traits": "cpp",
-        "iterator": "cpp"
+        "iterator": "cpp",
+        "random": "cpp",
+        "filesystem": "cpp"
     }
 }
