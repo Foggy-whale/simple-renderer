@@ -4,8 +4,8 @@
 #include "tgaimage.h"
 #include "random.h"
 
-constexpr int width  = 800;
-constexpr int height = 800;
+constexpr int width  = 64;
+constexpr int height = 64;
 
 constexpr TGAColor white   = {255, 255, 255, 255}; // attention, BGRA order
 constexpr TGAColor green   = {  0, 255,   0, 255};
@@ -19,23 +19,13 @@ std::pair<float, float> project(vec3 v) { // First of all, (x,y) is an orthogona
 }
 
 int main(int argc, char** argv) {
-    if (argc != 2) {
-        std::cerr << "Usage: " << argv[0] << " obj/model.obj" << std::endl;
-        return 1;
-    }
-
     Rasterizer r(width, height);
-    Model model(argv[1]);
-    Random rng;
 
-    for(int i = 0; i < model.nfaces(); i++) { // iterate through all triangles
-        auto [ax, ay] = project(model.vert(i, 0));
-        auto [bx, by] = project(model.vert(i, 1));
-        auto [cx, cy] = project(model.vert(i, 2));
-        TGAColor rnd;
-        for(int c = 0; c < 3; c++) rnd[c] = rng(256);
-        r.triangle({ax, ay}, {bx, by}, {cx, cy}, rnd);
-    }
+    float ax = 17, ay =  4, az =  13;
+    float bx = 55, by = 39, bz = 128;
+    float cx = 23, cy = 59, cz = 255;
+
+    r.triangle({ax, ay, az}, {bx, by, bz}, {cx, cy, cz});
     r.save_as("framebuffer.tga");
 
     return 0;
