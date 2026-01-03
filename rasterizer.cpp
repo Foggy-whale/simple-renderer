@@ -1,4 +1,5 @@
 #include <algorithm>
+#include "random.h"
 #include "rasterizer.h"
 
 static float signed_triangle_area(vec3 v1, vec3 v2, vec3 v3) {
@@ -34,7 +35,13 @@ void Rasterizer::line(vec2 v1, vec2 v2, TGAColor color) {
 
 void Rasterizer::triangle(vec3 v1, vec3 v2, vec3 v3) {
     float total_area = signed_triangle_area(v1, v2, v3);
-    // if (total_area < 1) return;
+    if (total_area < 1) return;
+
+    TGAColor c1, c2, c3;
+    Random rng;
+    c1 = {static_cast<uint8_t>(rng(256)), static_cast<uint8_t>(rng(256)), static_cast<uint8_t>(rng(256)), 255};
+    c2 = {static_cast<uint8_t>(rng(256)), static_cast<uint8_t>(rng(256)), static_cast<uint8_t>(rng(256)), 255};
+    c3 = {static_cast<uint8_t>(rng(256)), static_cast<uint8_t>(rng(256)), static_cast<uint8_t>(rng(256)), 255};
 
     auto [min, max] = find_bounding_box(v1, v2, v3);
     #pragma omp parallel for
@@ -44,8 +51,11 @@ void Rasterizer::triangle(vec3 v1, vec3 v2, vec3 v3) {
             float beta = signed_triangle_area(vec3(x, y, 0), v3, v1) / total_area;
             float gamma = signed_triangle_area(vec3(x, y, 0), v1, v2) / total_area;
             if (alpha < 0 || beta < 0 || gamma < 0) continue;
-            uint8_t z = static_cast<uint8_t>(alpha * v1.z + beta * v2.z + gamma * v3.z);
-            framebuffer.set(x, y, {z});
+            TGAColor c = {static_cast<uint8_t>(alpha * c1[0] + beta * c2[0] + gamma * c3[0]),
+                          static_cast<uint8_t>(alpha * c1[1] + beta * c2[1] + gamma * c3[1]),
+                          static_cast<uint8_t>(alpha * c1[2] + beta * c2[2] + gamma * c3[2]),
+                          255};
+            framebuffer.set(x, y, c);
         }
     }
 }

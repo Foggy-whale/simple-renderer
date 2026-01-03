@@ -10,7 +10,7 @@ private:
 public:
     Rasterizer() = default;
     Rasterizer(int width, int height) : width(width), height(height) {
-        framebuffer = TGAImage(width, height, TGAImage::GRAYSCALE);
+        framebuffer = TGAImage(width, height, TGAImage::RGB);
     }
     TGAImage get_framebuffer() { return framebuffer; }
     void save_as(const std::string& filename) { framebuffer.write_tga_file(filename); }
