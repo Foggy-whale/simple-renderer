@@ -66,6 +66,13 @@
         "type_traits": "cpp",
         "iterator": "cpp",
         "random": "cpp",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "atomic": "cpp",
+        "bit": "cpp",
+        "concepts": "cpp",
+        "format": "cpp",
+        "numeric": "cpp",
+        "system_error": "cpp",
+        "version": "cpp"
     }
 }

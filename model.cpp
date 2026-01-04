@@ -13,9 +13,10 @@ void Model::load_obj(const std::string filename) {
         std::cerr << "Failed to open file: " << filename << std::endl;
         return;
     }
+
+    Mesh mesh;
+    mesh.name = filename;
     std::string line;
-    int current_vert_offset = verts.size(); // Offset for vertex indices
-    
     while (!in.eof()) {
         std::getline(in, line);
         std::istringstream iss(line.c_str());
@@ -24,23 +25,23 @@ void Model::load_obj(const std::string filename) {
             iss >> trash;
             vec3 v;
             for (int i : {0,1,2}) iss >> v[i];
-            verts.push_back(v);
+            mesh.verts.push_back(v);
         } else if (!line.compare(0, 2, "f ")) {
             int f,t,n, cnt = 0;
             iss >> trash;
+            std::array<int, 3> face_indices;
             while (iss >> f >> trash >> t >> trash >> n) {
-                // f is 1-based index from the file.
-                // --f makes it 0-based relative to the *current* file.
-                // We need to add the offset of existing vertices.
-                facet_vrt.push_back((--f) + current_vert_offset);
+                if (cnt < 3) face_indices[cnt] = --f;
                 cnt++;
             }
-            if (3!=cnt) {
+            if (3==cnt) {
+                mesh.facet_vrt.push_back(face_indices);
+            } else {
                 std::cerr << "Error: the obj file is supposed to be triangulated: " << filename << std::endl;
-                // return; 
             }
         }
     }
+    meshes.push_back(mesh);
 }
 
 Model::Model(const std::string filename) {
@@ -53,16 +54,61 @@ Model::Model(const std::string filename) {
     } else {
         load_obj(filename);
     }
-    std::cerr << "# v# " << nverts() << " f# "  << nfaces() << std::endl;
+    std::cerr << "# meshes " << meshes.size() << std::endl;
 }
 
-int Model::nverts() const { return verts.size(); }
-int Model::nfaces() const { return facet_vrt.size()/3; }
-
-vec3 Model::vert(const int i) const {
-    return verts[i];
+int Model::nmeshes() const {
+    return meshes.size();
 }
 
-vec3 Model::vert(const int iface, const int nthvert) const {
-    return verts[facet_vrt[iface*3+nthvert]];
+Mesh& Model::mesh(int i) {
+    return meshes[i];
+}
+
+const Mesh& Model::mesh(int i) const {
+    return meshes[i];
+}
+
+Model& Model::set_pos(vec3 pos) {
+    this->pos = pos;
+    return *this;
+}
+
+Model& Model::set_scale(vec3 scale) {
+    this->scl = scale;
+    return *this;
+}
+
+Model& Model::set_rot(vec3 rot) {
+    this->rot = rot;
+    return *this;
+}
+
+mat4 Model::get_model_matrix() const {
+    mat4 model = identity<4>(), translate, scale, rotateX, rotateY, rotateZ;
+    translate << 1, 0, 0, pos.x,
+                 0, 1, 0, pos.y,
+                 0, 0, 1, pos.z,
+                 0, 0, 0, 1;
+
+    scale << scl.x, 0, 0, 0,
+             0, scl.y, 0, 0,
+             0, 0, scl.z, 0,
+             0, 0, 0, 1;
+
+    rotateX << std::cos(rot.x), -std::sin(rot.x), 0, 0,
+              std::sin(rot.x), std::cos(rot.x), 0, 0,
+              0, 0, 1, 0,
+              0, 0, 0, 1;
+    rotateY << std::cos(rot.y), 0, -std::sin(rot.y), 0,
+              0, 1, 0, 0,
+              std::sin(rot.y), 0, std::cos(rot.y), 0,
+              0, 0, 0, 1;
+    rotateZ << 1, 0, 0, 0,
+              0, std::cos(rot.z), -std::sin(rot.z), 0,
+              0, std::sin(rot.z), std::cos(rot.z), 0,
+              0, 0, 0, 1;
+
+    model = translate * rotateX * rotateY * rotateZ * scale; // ZYX order
+    return model;
 }

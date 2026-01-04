@@ -1,32 +1,33 @@
 #include <cmath>
-#include <tuple>
+#include <iostream>
 #include "rasterizer.h"
 #include "tgaimage.h"
 #include "random.h"
+#include "scene.h"
 
-constexpr int width  = 64;
-constexpr int height = 64;
-
-constexpr TGAColor white   = {255, 255, 255, 255}; // attention, BGRA order
-constexpr TGAColor green   = {  0, 255,   0, 255};
-constexpr TGAColor red     = {  0,   0, 255, 255};
-constexpr TGAColor blue    = {255, 128,  64, 255};
-constexpr TGAColor yellow  = {  0, 200, 255, 255};
-
-std::pair<float, float> project(vec3 v) { // First of all, (x,y) is an orthogonal projection of the vector (x,y,z).
-    return { (v.x + 1.) *  width / 2.f,   // Second, since the input models are scaled to have fit in the [-1,1]^3 world coordinates,
-             (v.y + 1.) * height / 2.f }; // we want to shift the vector (x,y) and then scale it to span the entire screen.
-}
+constexpr int width  = 800;
+constexpr int height = 800;
 
 int main(int argc, char** argv) {
+    if (argc != 2) {
+        std::cerr << "Usage: " << argv[0] << " obj/model.obj" << std::endl;
+        return 1;
+    }
+    vec3 eye_pos = 3 * vec3(std::cos(90 * M_PI / 180), 0, std::sin(90 * M_PI / 180));
+    Scene scene;
+    Model model(argv[1]);
+    Camera camera;
+    model.set_pos({0, 0, 0}).set_rot({0, 0, 0}).set_scale({1, 1, 1});
+    scene.addModel(model);
+    camera.set_eye(eye_pos).set_target({0, 0, 0}).set_up({0, 1, 0}).set_projection(45, width / height, 0.1, 100);
+    scene.setCamera(camera);
+
     Rasterizer r(width, height);
+    r.enable_ssaa(3);
+    r.draw(scene);
 
-    float ax = 17, ay =  4, az =  13;
-    float bx = 55, by = 39, bz = 128;
-    float cx = 23, cy = 59, cz = 255;
-
-    r.triangle({ax, ay, az}, {bx, by, bz}, {cx, cy, cz});
     r.save_as("framebuffer.tga");
+    r.save_zbuffer_as("zbuffer.tga");
 
     return 0;
 }

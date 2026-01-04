@@ -17,11 +17,12 @@ endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU|Intel")
   add_compile_options(-Wall)
+  add_compile_options(-O3)
 endif()
 
 find_package(OpenMP COMPONENTS CXX)
 
-set(SOURCES main.cpp model.cpp rasterizer.cpp tgaimage.cpp)
+set(SOURCES main.cpp triangle.cpp model.cpp camera.cpp rasterizer.cpp tgaimage.cpp)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} PRIVATE $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>)

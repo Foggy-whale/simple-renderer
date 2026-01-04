@@ -1,15 +1,32 @@
 #pragma once
 #include <vector>
+#include <string>
+#include <array>
 #include "geometry.h"
 
+struct Mesh {
+    std::string name;
+    std::vector<vec3> verts; // array of vertices
+    std::vector<std::array<int, 3>> facet_vrt; // per-triangle index in the above array
+    
+    // std::vector<vec3> norms; // per-vertex normals
+    // std::vector<vec2> uv;    // per-vertex texture coordinates
+};
+
 class Model {
-    std::vector<vec3> verts = {};    // array of vertices
-    std::vector<int> facet_vrt = {}; // per-triangle index in the above array
+    vec3 pos, scl, rot; // position, scale, rotation serve for model transformation
+    std::vector<Mesh> meshes;
     void load_obj(const std::string filename);
 public:
+    Model() = default;
     Model(const std::string filename);
-    int nverts() const; // number of vertices
-    int nfaces() const; // number of triangles
-    vec3 vert(const int i) const;                          // 0 <= i < nverts()
-    vec3 vert(const int iface, const int nthvert) const;   // 0 <= iface <= nfaces(), 0 <= nthvert < 3
-};
+    
+    int nmeshes() const;
+    Mesh& mesh(int i);
+    const Mesh& mesh(int i) const;
+    
+    Model& set_pos(vec3 pos);
+    Model& set_scale(vec3 scale);
+    Model& set_rot(vec3 rot);
+    mat4 get_model_matrix() const;
+}; 
