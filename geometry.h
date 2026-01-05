@@ -141,6 +141,10 @@ inline vec3 cross_product(const vec3 &v1, const vec3 &v2) {
     return {v1.y*v2.z - v1.z*v2.y, v1.z*v2.x - v1.x*v2.z, v1.x*v2.y - v1.y*v2.x};
 }
 
+inline vec4 to_vec4(const vec3& v) {
+    return vec4(v.x, v.y, v.z, 1);
+}
+
 template<typename T, int N> struct MatInitializer { // 仿照 Eigen 写的矩阵初始化器
     /* 支持初始化格式：
         mat4 << 1, 0, 0, 0,

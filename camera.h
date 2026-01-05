@@ -21,4 +21,6 @@ public:
 
     mat4 get_view_matrix() const;
     mat4 get_projection_matrix() const;
+    
+    vec3 get_eye() const { return eye; }
 };

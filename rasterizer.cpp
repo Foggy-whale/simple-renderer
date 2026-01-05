@@ -7,10 +7,6 @@ static T interpolate(float alpha, float beta, float gamma, const T& a, const T& 
     return a * alpha + b * beta + c * gamma;
 }
 
-static vec4 to_vec4(const vec3& v) {
-    return vec4(v.x, v.y, v.z, 1);
-}
-
 static float signed_triangle_area(vec4 v1, vec4 v2, vec4 v3) {
     return 0.5f * ((v2.x - v1.x) * (v3.y - v1.y) - (v2.y - v1.y) * (v3.x - v1.x));
 }
@@ -57,18 +53,20 @@ void Rasterizer::draw_line(vec2 v1, vec2 v2, TGAColor color) {
     }
 }
 
-void Rasterizer::draw_triangle(const Triangle& triangle) {
+void Rasterizer::draw_triangle(const Triangle& triangle, IShader& shader) {
     vec4 v1 = triangle.v[0], v2 = triangle.v[1], v3 = triangle.v[2];
     float total_area = signed_triangle_area(v1, v2, v3);
-    // Relaxed check to allow negative area (different winding order due to Y-flip)
-    // Only cull degenerate triangles with near-zero area
     if (std::abs(total_area) < 1e-5) return;
 
-    vec3 c1 = triangle.color[0], c2 = triangle.color[1], c3 = triangle.color[2];
+    // Construct vertices from Triangle data for interpolation
+    Vertex vert1, vert2, vert3;
+    vert1.pos = v1; vert1.color = triangle.color[0]; vert1.normal = triangle.normal[0]; vert1.uv = triangle.tex_coord[0]; vert1.world_pos = triangle.world_pos[0];
+    vert2.pos = v2; vert2.color = triangle.color[1]; vert2.normal = triangle.normal[1]; vert2.uv = triangle.tex_coord[1]; vert2.world_pos = triangle.world_pos[1];
+    vert3.pos = v3; vert3.color = triangle.color[2]; vert3.normal = triangle.normal[2]; vert3.uv = triangle.tex_coord[2]; vert3.world_pos = triangle.world_pos[2];
+
     float inv_total_area = 1.f / total_area;
     auto [min, max] = find_bounding_box(v1, v2, v3);
     
-    // Bounds checking to prevent segfault
     int min_x = std::max(0, (int)min.x);
     int max_x = std::min(width - 1, (int)max.x);
     int min_y = std::max(0, (int)min.y);
@@ -91,32 +89,51 @@ void Rasterizer::draw_triangle(const Triangle& triangle) {
                     float alpha_pc = alpha * (w_reciprocal / v1.w);
                     float beta_pc = beta * (w_reciprocal / v2.w);
                     float gamma_pc = gamma * (w_reciprocal / v3.w);
+                    
                     float z = interpolate(alpha_pc, beta_pc, gamma_pc, v1.z, v2.z, v3.z);
                     int ind = (x + y * width) * ssaa * ssaa + sj * ssaa + si;
                     if(z <= get_depth(ind)) continue;
-                    vec3 color = interpolate(alpha_pc, beta_pc, gamma_pc, c1, c2, c3);
-                    set_depth(ind, z);
-                    set_pixel(ind, color);   
+                    
+                    Vertex interpolated;
+                    interpolated.pos = {x_sample, y_sample, z, 1.0f}; // approximate pos
+                    interpolated.color = interpolate(alpha_pc, beta_pc, gamma_pc, vert1.color, vert2.color, vert3.color);
+                    interpolated.normal = interpolate(alpha_pc, beta_pc, gamma_pc, vert1.normal, vert2.normal, vert3.normal).normalized();
+                    interpolated.uv = interpolate(alpha_pc, beta_pc, gamma_pc, vert1.uv, vert2.uv, vert3.uv);
+                    interpolated.world_pos = interpolate(alpha_pc, beta_pc, gamma_pc, vert1.world_pos, vert2.world_pos, vert3.world_pos);
+                    // Interpolate world pos for lighting
+                    // Note: strictly we should interpolate other attributes using barycentric coords
+                    // But for FlatShader, fragment shader uses face constant values anyway.
+                    // However, we should pass 'v' to fragment.
+                    
+                    vec3 color;
+                    bool discard = shader.fragment(interpolated, color);
+                    if (!discard) {
+                        set_depth(ind, z);
+                        set_pixel(ind, color);   
+                    }
                 }
             }
         }
     }
 }
 
-void Rasterizer::draw_model(const Model& m, const mat4& mvp) {
+void Rasterizer::draw_model(const Model& m, IShader& shader) {
     for(int i = 0; i < m.nmeshes(); i++) {
         const auto& mesh = m.mesh(i);
         for (int j = 0; j < mesh.facet_vrt.size(); j++) {
+            Vertex v0_vert = shader.vertex(mesh, j, 0);
+            Vertex v1_vert = shader.vertex(mesh, j, 1);
+            Vertex v2_vert = shader.vertex(mesh, j, 2);
+
             Triangle t;
-            vec4 v0 = to_vec4(mesh.verts[mesh.facet_vrt[j][0]]);
-            vec4 v1 = to_vec4(mesh.verts[mesh.facet_vrt[j][1]]);
-            vec4 v2 = to_vec4(mesh.verts[mesh.facet_vrt[j][2]]);
+            // Perspective division and viewport transform are now handled here or in shader?
+            // Usually shader returns clip space. Rasterizer does division and viewport.
+            // My shader.vertex returns clip space in v.pos (mvp * pos).
             
-            // MVP Transformation
-            v0 = mvp * v0;
-            v1 = mvp * v1;
-            v2 = mvp * v2;
-            // Perspective-Division
+            vec4 v0 = v0_vert.pos;
+            vec4 v1 = v1_vert.pos;
+            vec4 v2 = v2_vert.pos;
+            
             auto perspective_divide = [](vec4& v) {
                 v.x /= v.w;
                 v.y /= v.w;
@@ -125,11 +142,11 @@ void Rasterizer::draw_model(const Model& m, const mat4& mvp) {
             perspective_divide(v0);
             perspective_divide(v1);
             perspective_divide(v2);
-            // Viewport Transformation
+            
             auto viewport_transform = [&](vec4& v) {
                 v.x = (v.x + 1.f) * 0.5f * width;
                 v.y = (v.y + 1.f) * 0.5f * height;
-                v.z = (1.f - v.z) * 0.5f; // Reversed-Z
+                v.z = (1.f - v.z) * 0.5f;
             };
             viewport_transform(v0);
             viewport_transform(v1);
@@ -138,14 +155,16 @@ void Rasterizer::draw_model(const Model& m, const mat4& mvp) {
             t.setVertex(0, v0);
             t.setVertex(1, v1);
             t.setVertex(2, v2);
+            
+            t.setColor(0, v0_vert.color.x, v0_vert.color.y, v0_vert.color.z);
+            t.setColor(1, v1_vert.color.x, v1_vert.color.y, v1_vert.color.z);
+            t.setColor(2, v2_vert.color.x, v2_vert.color.y, v2_vert.color.z);
+            
+            t.setWorldPos(0, v0_vert.world_pos);
+            t.setWorldPos(1, v1_vert.world_pos);
+            t.setWorldPos(2, v2_vert.world_pos);
 
-            Random rng;
-            float r = rng(256), g = rng(256), b = rng(256); 
-            t.setColor(0, r, g, b);
-            t.setColor(1, r, g, b);
-            t.setColor(2, r, g, b);
-
-            draw_triangle(t);
+            draw_triangle(t, shader);
         }
     }
 }
@@ -155,8 +174,28 @@ void Rasterizer::draw(const Scene& scene) {
     view = camera.get_view_matrix();
     projection = camera.get_projection_matrix();
     mat4 vp = projection * view;
+    
+    std::shared_ptr<IShader> shader = scene.getShader();
+    if (!shader) {
+        // Fallback or error
+        return; 
+    }
+    
+    // Set shader uniforms that are common
+    // Helper lambda to update uniforms based on type
+    auto update_shader = [&](const mat4& m_matrix) {
+        if (auto* s = dynamic_cast<FlatShader*>(shader.get())) {
+            s->model = m_matrix;
+            s->mvp = vp * m_matrix;
+            s->lights = scene.getLights();
+            s->eye_pos = camera.get_eye();
+        }
+    };
+
     for(auto m : scene.getModels()) {
-        draw_model(m, vp * m.get_model_matrix());
+        model = m.get_model_matrix();
+        update_shader(model);
+        draw_model(m, *shader);
     }
 }
 

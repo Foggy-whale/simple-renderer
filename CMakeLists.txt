@@ -21,10 +21,13 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU|Intel")
 endif()
 
 find_package(OpenMP COMPONENTS CXX)
+find_package(OpenCV REQUIRED)
+include_directories("opt/homebrew/include")
 
-set(SOURCES main.cpp triangle.cpp model.cpp camera.cpp rasterizer.cpp tgaimage.cpp)
+set(SOURCES main.cpp triangle.cpp model.cpp camera.cpp shader.cpp rasterizer.cpp tgaimage.cpp)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} PRIVATE $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${OpenCV_LIBS})
 
 file(GENERATE OUTPUT .gitignore CONTENT "*")

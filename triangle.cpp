@@ -14,11 +14,14 @@ Triangle& Triangle::setNormal(int ind, vec3 n) {
 
 Triangle& Triangle::setColor(int ind, float r, float g, float b) {
     assert(ind >= 0 && ind < 3);
-    auto validate = [](float c) {
-        return std::clamp(c / 255.0f, 0.0f, 1.0f);
-    };
+    auto clamp01 = [](float c) { return std::clamp(c, 0.0f, 1.0f); };
+    color[ind] = vec3(clamp01(r), clamp01(g), clamp01(b));
+    return *this;
+}
 
-    color[ind] = vec3(validate(r), validate(g), validate(b));
+Triangle& Triangle::setWorldPos(int ind, vec3 p) {
+    assert(ind >= 0 && ind < 3);
+    world_pos[ind] = p;
     return *this;
 }
 
