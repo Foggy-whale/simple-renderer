@@ -7,8 +7,8 @@ mat4 Camera::get_view_matrix() const {
     mat4 rotate, translate;
 
     vec3 lookat = (eye - target).normalized(), temp_up = up.normalized();
-    if(fabs(temp_up * lookat) > 0.999f) {
-        temp_up = (temp_up * lookat > 0) ? vec3(0, 0, -1) : vec3(0, 0, 1);
+    if(fabs(dot_product(temp_up, lookat)) > 0.999f) {
+        temp_up = (dot_product(temp_up, lookat) > 0) ? vec3(0, 0, -1) : vec3(0, 0, 1);
     }
     vec3 right  = cross_product(temp_up, lookat).normalized();
     vec3 new_up = cross_product(lookat, right).normalized();

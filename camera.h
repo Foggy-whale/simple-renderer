@@ -19,8 +19,10 @@ public:
     Camera& set_up(vec3 up);
     Camera& set_projection(float fov, float aspect, float zNear, float zFar);
 
+    vec3 get_eye() const { return eye; }
+    vec3 get_target() const { return target; }
+    vec3 get_up() const { return up; }
+    
     mat4 get_view_matrix() const;
     mat4 get_projection_matrix() const;
-    
-    vec3 get_eye() const { return eye; }
 };

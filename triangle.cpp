@@ -1,41 +1,40 @@
 #include "triangle.h"
 
-Triangle& Triangle::setVertex(int ind, vec4 ver) {
+Triangle& Triangle::set_vertex(const int& ind, const vec4& ver) {
     assert(ind >= 0 && ind < 3);
     v[ind] = ver;
     return *this;
 }
 
-Triangle& Triangle::setNormal(int ind, vec3 n) {
+Triangle& Triangle::set_normal(const int& ind, const vec3& n) {
     assert(ind >= 0 && ind < 3);
     normal[ind] = n;
     return *this;
 }
 
-Triangle& Triangle::setColor(int ind, float r, float g, float b) {
+Triangle& Triangle::set_color(const int& ind, const vec3& c) {
     assert(ind >= 0 && ind < 3);
-    auto clamp01 = [](float c) { return std::clamp(c, 0.0f, 1.0f); };
-    color[ind] = vec3(clamp01(r), clamp01(g), clamp01(b));
+    color[ind] = c;
     return *this;
 }
 
-Triangle& Triangle::setWorldPos(int ind, vec3 p) {
+Triangle &Triangle::set_world_pos(const int& ind, const vec3& p) {
     assert(ind >= 0 && ind < 3);
     world_pos[ind] = p;
     return *this;
 }
 
-Triangle &Triangle::setNormals(const std::array<vec3, 3>& normals) {
+Triangle &Triangle::set_normals(const std::array<vec3, 3>& normals) {
     for(int i = 0; i < 3; i++) normal[i] = normals[i];
     return *this;
 }
 
-Triangle& Triangle::setColors(const std::array<vec3, 3>& colors) {
+Triangle& Triangle::set_colors(const std::array<vec3, 3>& colors) {
     for(int i = 0; i < 3; i++) color[i] = colors[i];
     return *this;
 }
 
-Triangle &Triangle::setTexCoord(int ind, vec2 uv) {
+Triangle &Triangle::set_tex_coord(const int& ind, const vec2& uv) {
     assert(ind >= 0 && ind < 3);
     tex_coord[ind] = uv;
     return *this;

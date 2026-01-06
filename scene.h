@@ -1,25 +1,22 @@
 #pragma once
 #include <vector>
+#include <memory>
 #include "model.h"
 #include "camera.h"
-
-#include <memory>
 #include "shader.h"
 
 class Scene {
 private:
+    Camera activeCamera;
     std::vector<Model> models;
-    Camera mainCamera;
     std::vector<Light> lights;
-    std::shared_ptr<IShader> shader;
 public:
-    void addModel(Model m) { models.push_back(m); }
-    void setCamera(const Camera& c) { mainCamera = c; }
-    void addLight(Light l) { lights.push_back(l); }
-    void setShader(std::shared_ptr<IShader> s) { shader = s; }
+    void add_model(Model m) { models.push_back(m); }
+    void add_light(Light l) { lights.push_back(l); }
+    void set_camera(const Camera& c) { activeCamera = c; }
     
-    const std::vector<Model>& getModels() const { return models; }
-    const Camera& getCamera() const { return mainCamera; }
-    const std::vector<Light>& getLights() const { return lights; }
-    std::shared_ptr<IShader> getShader() const { return shader; }
+    Camera& get_camera() { return activeCamera; }
+    const Camera& get_camera() const { return activeCamera; }
+    const std::vector<Model>& get_models() const { return models; }
+    const std::vector<Light>& get_lights() const { return lights; }
 };

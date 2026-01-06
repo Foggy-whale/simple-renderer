@@ -3,6 +3,15 @@
 #include <cassert>
 #include <iostream>
 
+template<int n> struct vec;
+typedef vec<2> vec2;
+typedef vec<3> vec3;
+typedef vec<4> vec4;
+
+template<int n> inline float dot_product(const vec<n>& lhs, const vec<n>& rhs);
+inline vec2 cross_product(const vec2 &v1, const vec2 &v2);
+inline vec3 cross_product(const vec3 &v1, const vec3 &v2);
+
 /* 定义向量类 */
 template<int n> struct vec {
     float data[n] = {0};
@@ -14,14 +23,19 @@ template<int n> struct vec {
     }
     float& operator[](const int i)       { assert(i>=0 && i<n); return data[i]; }
     float  operator[](const int i) const { assert(i>=0 && i<n); return data[i]; }
-    float norm() const { return std::sqrt(*this * *this); }
+    float norm() const { return std::sqrt(dot_product(*this, *this)); }
     vec<n> normalized() const { return *this / norm(); }
+    vec<n> clamp(float min, float max) const {
+        vec<n> ret = *this;
+        for(int i = 0; i < n; i++) ret[i] = std::clamp(ret[i], min, max);
+        return ret;
+    }
 };
 
 // ---> 重载向量运算符
-template<int n> float operator*(const vec<n>& lhs, const vec<n>& rhs) {
-    float ret = 0;
-    for(int i = 0; i < n; i++) ret += lhs[i] * rhs[i]; 
+template<int n> vec<n> operator*(const vec<n>& lhs, const vec<n>& rhs) {
+    vec<n> ret = lhs;
+    for(int i = 0; i < n; i++) ret[i] *= rhs[i]; 
     return ret;
 }
 
@@ -48,8 +62,10 @@ template<int n> vec<n> operator*(const float& lhs, const vec<n> &rhs) {
 }
 
 template<int n> vec<n> operator/(const vec<n>& lhs, const float& rhs) {
+    assert(rhs != 0);
     vec<n> ret = lhs;
-    for(int i = 0; i < n; i++) ret[i] /= rhs;
+    float inv_rhs = 1.0f / rhs;
+    for(int i = 0; i < n; i++) ret[i] *= inv_rhs; // 除法变乘法，小优化
     return ret;
 }
 
@@ -69,7 +85,9 @@ template<int n> vec<n>& operator*=(vec<n>& lhs, const float& rhs) {
 }
 
 template<int n> vec<n>& operator/=(vec<n>& lhs, const float& rhs) {
-    for(int i = 0; i < n; i++) lhs[i] /= rhs;
+    assert(rhs != 0);
+    float inv_rhs = 1.0f / rhs;
+    for(int i = 0; i < n; i++) lhs[i] *= inv_rhs; // 除法变乘法，小优化
     return lhs;
 }
 
@@ -91,8 +109,9 @@ template<> struct vec<2> {
     }
     float& operator[](const int i)       { assert(i>=0 && i<2); return i ? y : x; }
     float  operator[](const int i) const { assert(i>=0 && i<2); return i ? y : x; }
-    float norm() const { return std::sqrt(*this * *this); }
-    vec<2> normalized() const { return *this / norm(); }
+    float norm() const { return std::sqrt(x*x + y*y); }
+    vec<2> normalized() const { return vec<2>{x, y} / norm(); }
+    vec<2> clamp(float min, float max) const { return vec<2>(std::clamp(x, min, max), std::clamp(y, min, max)); }
 };
 
 template<> struct vec<3> {
@@ -106,8 +125,9 @@ template<> struct vec<3> {
     }
     float& operator[](const int i)       { assert(i>=0 && i<3); return i ? (1==i ? y : z) : x; }
     float  operator[](const int i) const { assert(i>=0 && i<3); return i ? (1==i ? y : z) : x; }
-    float norm() const { return std::sqrt(*this * *this); }
-    vec<3> normalized() const { return *this / norm(); }
+    float norm() const { return std::sqrt(x*x + y*y + z*z); }
+    vec<3> normalized() const { return vec<3>{x, y, z} / norm(); }
+    vec<3> clamp(float min, float max) const { return vec<3>(std::clamp(x, min, max), std::clamp(y, min, max), std::clamp(z, min, max)); }
 };
 
 template<> struct vec<4> {
@@ -124,14 +144,26 @@ template<> struct vec<4> {
 
     vec<2> xy()  const { return {x, y}; }
     vec<3> xyz() const { return {x, y, z}; }
-    float norm() const { return std::sqrt(*this * *this); }
-    vec<4> normalized() const { return *this / norm(); }
+    float norm() const { return std::sqrt(x*x + y*y + z*z + w*w); }
+    vec<4> normalized() const { return vec<4>{x, y, z, w} / norm(); }
+    vec<4> clamp(float min, float max) const { return vec<4>(std::clamp(x, min, max), std::clamp(y, min, max), std::clamp(z, min, max), std::clamp(w, min, max)); }
 };
-
-typedef vec<2> vec2;
-typedef vec<3> vec3;
-typedef vec<4> vec4;
 // <--- 定义vec2, vec3, vec4
+template<int m, int n> vec<m> embed(const vec<n> &v, float fill=0) {
+    vec<m> ret;
+    for (int i=0; i<m; i++) {
+        // 如果原向量有这一维就复制，没有就填 fill
+        ret[i] = (i<n ? v[i] : fill);
+    }
+    return ret;
+}
+
+template<int n> 
+inline float dot_product(const vec<n>& lhs, const vec<n>& rhs) {
+    float ret = 0;
+    for(int i = 0; i < n; i++) ret += lhs[i] * rhs[i]; 
+    return ret;
+}
 
 inline vec2 cross_product(const vec2 &v1, const vec2 &v2) {
     return {v1.x*v2.y - v1.y*v2.x};
@@ -141,9 +173,6 @@ inline vec3 cross_product(const vec3 &v1, const vec3 &v2) {
     return {v1.y*v2.z - v1.z*v2.y, v1.z*v2.x - v1.x*v2.z, v1.x*v2.y - v1.y*v2.x};
 }
 
-inline vec4 to_vec4(const vec3& v) {
-    return vec4(v.x, v.y, v.z, 1);
-}
 
 template<typename T, int N> struct MatInitializer { // 仿照 Eigen 写的矩阵初始化器
     /* 支持初始化格式：
@@ -195,11 +224,25 @@ template<int n> struct mat {
         return sub.det() * ((row + col) % 2 ? -1 : 1);
     }
 
+    mat<n> inverse_transpose() const {
+    float det = this->det();
+    assert(det != 0);
+    mat<n> ret;
+    for(int i = 0; i < n; i++) {
+        for(int j = 0; j < n; j++) {
+            ret[i][j] = cofactor(i, j) / det;
+        }
+    }
+    return ret;
+}
+
     mat<n> transpose() const {
         mat<n> ret;
-        for(int i = 0; i < n; i++)
-            for(int j = 0; j < n; j++)
+        for(int i = 0; i < n; i++) {
+            for(int j = 0; j < n; j++) {
                 ret[i][j] = (*this)[j][i];
+            }
+        }
         return ret;
     }
 
@@ -207,9 +250,11 @@ template<int n> struct mat {
         float det = this->det();
         assert(det != 0);
         mat<n> ret;
-        for(int i = 0; i < n; i++)
-            for(int j = 0; j < n; j++)
-                ret[i][j] = cofactor(i, j) / det;
+        for(int i = 0; i < n; i++) {
+            for(int j = 0; j < n; j++) {
+                ret[j][i] = cofactor(i, j) / det;
+            }
+        }
         return ret;
     }
 };
@@ -230,22 +275,19 @@ template<int n> std::ostream& operator<<(std::ostream& out, const mat<n>& m) {
 
 template<int n> mat<n> operator+(const mat<n>& lhs, const mat<n>& rhs) {
     mat<n> ret;
-    for(int i = 0; i < n; i++)
-        ret[i] = lhs[i] + rhs[i];
+    for(int i = 0; i < n; i++) ret[i] = lhs[i] + rhs[i];
     return ret;
 }
 
 template<int n> mat<n> operator-(const mat<n>& lhs, const mat<n>& rhs) {
     mat<n> ret;
-    for(int i = 0; i < n; i++)
-        ret[i] = lhs[i] - rhs[i];
+    for(int i = 0; i < n; i++) ret[i] = lhs[i] - rhs[i];
     return ret;
 }
 
 template<int n> mat<n> operator*(const mat<n>& lhs, const float& rhs) {
     mat<n> ret;
-    for(int i = 0; i < n; i++)
-        ret[i] = lhs[i] * rhs;
+    for(int i = 0; i < n; i++) ret[i] = lhs[i] * rhs;
     return ret;
 }
 
@@ -254,9 +296,10 @@ template<int n> mat<n> operator*(const float& lhs, const mat<n>& rhs) {
 }
 
 template<int n> mat<n> operator/(const mat<n>& lhs, const float& rhs) {
+    assert(rhs != 0);
     mat<n> ret;
-    for(int i = 0; i < n; i++)
-        ret[i] = lhs[i] / rhs;
+    float inv = 1.0f / rhs;
+    for(int i = 0; i < n; i++) ret[i] = lhs[i] * inv;
     return ret;
 }
 
@@ -293,7 +336,9 @@ template<int n> mat<n>& operator*=(mat<n>& lhs, const float& rhs) {
 }
 
 template<int n> mat<n>& operator/=(mat<n>& lhs, const float& rhs) {
-    for(int i = 0; i < n; i++) lhs[i] /= rhs;
+    assert(rhs != 0);
+    float inv = 1.0f / rhs;
+    for(int i = 0; i < n; i++) lhs[i] *= inv;
     return lhs;
 }
 // <--- 重载矩阵运算符

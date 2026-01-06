@@ -12,12 +12,12 @@ struct Triangle {
     vec4 b() const { return v[1]; }
     vec4 c() const { return v[2]; }
 
-    Triangle& setVertex(int ind, vec4 ver); 
-    Triangle& setNormal(int ind, vec3 n); 
-    Triangle& setColor(int ind, float r, float g, float b);
-    Triangle& setWorldPos(int ind, vec3 p);
+    Triangle& set_vertex(const int& ind, const vec4& ver); 
+    Triangle& set_normal(const int& ind, const vec3& n); 
+    Triangle& set_color(const int& ind, const vec3& c);
+    Triangle& set_world_pos(const int& ind, const vec3& p);
 
-    Triangle& setNormals(const std::array<vec3, 3>& normals);
-    Triangle& setColors(const std::array<vec3, 3>& colors);
-    Triangle& setTexCoord(int ind, vec2 uv);
+    Triangle& set_normals(const std::array<vec3, 3>& normals);
+    Triangle& set_colors(const std::array<vec3, 3>& colors);
+    Triangle& set_tex_coord(const int& ind, const vec2& uv);
 };

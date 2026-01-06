@@ -102,6 +102,10 @@
         "syncstream": "cpp",
         "typeindex": "cpp",
         "unordered_set": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "chrono": "cpp",
+        "ranges": "cpp",
+        "hash_map": "cpp",
+        "hash_set": "cpp"
     }
 }

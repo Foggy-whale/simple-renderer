@@ -26,16 +26,26 @@ void Model::load_obj(const std::string filename) {
             vec3 v;
             for (int i : {0,1,2}) iss >> v[i];
             mesh.verts.push_back(v);
+        } else if (!line.compare(0, 3, "vn ")) {
+            iss >> trash >> trash;
+            vec3 n;
+            for (int i : {0,1,2}) iss >> n[i];
+            mesh.norms.push_back(n);
         } else if (!line.compare(0, 2, "f ")) {
             int f,t,n, cnt = 0;
             iss >> trash;
             std::array<int, 3> face_indices;
+            std::array<int, 3> face_norm_indices;
             while (iss >> f >> trash >> t >> trash >> n) {
-                if (cnt < 3) face_indices[cnt] = --f;
+                if (cnt < 3) {
+                    face_indices[cnt] = --f;
+                    face_norm_indices[cnt] = --n;
+                }
                 cnt++;
             }
             if (3==cnt) {
                 mesh.facet_vrt.push_back(face_indices);
+                mesh.facet_nrm.push_back(face_norm_indices);
             } else {
                 std::cerr << "Error: the obj file is supposed to be triangulated: " << filename << std::endl;
             }
@@ -67,21 +77,6 @@ Mesh& Model::mesh(int i) {
 
 const Mesh& Model::mesh(int i) const {
     return meshes[i];
-}
-
-Model& Model::set_pos(vec3 pos) {
-    this->pos = pos;
-    return *this;
-}
-
-Model& Model::set_scale(vec3 scale) {
-    this->scl = scale;
-    return *this;
-}
-
-Model& Model::set_rot(vec3 rot) {
-    this->rot = rot;
-    return *this;
 }
 
 mat4 Model::get_model_matrix() const {
