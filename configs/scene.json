@@ -1,0 +1,149 @@
+{
+    "african_head": {
+        "model": {
+            "path": "obj/african_head", 
+            "pos": [0, 0, 0], 
+            "rot": [0, 0, 0],
+            "scale": [1, 1, 1],
+            "material": {
+                "diffuse_color": [1.0, 1.0, 1.0],
+                "ambient": [0.05, 0.05, 0.05],
+                "diffuse": [0.4, 0.3, 0.2],
+                "specular": [0.7937, 0.7937, 0.7937],
+                "shininess": 150.0,
+                "shader": "gouraud"
+            }
+        },
+        "camera": { 
+            "eye": [-2, 0, 2], 
+            "target": [0, 0, 0], 
+            "up": [0, 1, 0] 
+        },
+        "light": [
+            {
+                "pos": [4, 4, 4],
+                "intensity": [50, 50, 50]
+            },
+            {
+                "pos": [-4, 4, 0],
+                "intensity": [50, 50, 50]
+            }
+        ]
+    },
+
+    "diablo": {
+        "model": { 
+            "path": "obj/diablo3_pose", 
+            "pos": [0, 0, 0], 
+            "rot": [0, 0, 0],
+            "scale": [1, 1, 1],
+            "material": {
+                "diffuse_color": [1.0, 1.0, 1.0],
+                "ambient": [0.05, 0.05, 0.05],
+                "diffuse": [0.4, 0.3, 0.2],
+                "specular": [0.7937, 0.7937, 0.7937],
+                "shininess": 150.0,
+                "shader": "flat"
+            }
+        },
+        "camera": { 
+            "eye": [0, 0, 3], 
+            "target": [0, 0, 0], 
+            "up": [0, 1, 0] 
+        },
+        "light": [
+            {
+                "pos": [4, 8, 4],
+                "intensity": [200, 200, 200]
+            }
+        ]
+    },
+
+    "boggie": {
+        "model": { 
+            "path": "obj/boggie", 
+            "pos": [0, 0, 0], 
+            "rot": [0, 0, 0],
+            "scale": [1, 1, 1],
+            "material": {
+                "diffuse_color": [1.0, 1.0, 1.0],
+                "ambient": [0.05, 0.05, 0.05],
+                "diffuse": [0.4, 0.3, 0.2],
+                "specular": [0.7937, 0.7937, 0.7937],
+                "shininess": 150.0,
+                "shader": "flat"
+            }
+        },
+        "camera": { 
+            "eye": [-1, 0, 2.5], 
+            "target": [0, 0, 0], 
+            "up": [0, 1, 0] 
+        },
+        "light": [
+            {
+                "pos": [4, 4, 4],
+                "intensity": [50, 50, 50]
+            },
+            {
+                "pos": [-4, 4, 0],
+                "intensity": [50, 50, 50]
+            }
+        ]
+    },
+
+    "Darius": {
+        "model": { 
+            "path": "obj/Darius", 
+            "pos": [0, 0, 0], 
+            "rot": [0, 0, 0],
+            "scale": [0.1, 0.1, 0.1],
+            "material": {
+                "diffuse_color": [1.0, 1.0, 1.0],
+                "ambient": [0.05, 0.05, 0.05],
+                "diffuse": [0.2, 0.3, 0.4],
+                "specular": [0.7937, 0.7937, 0.7937],
+                "shininess": 150.0,
+                "shader": "phong"
+            }
+        },
+        "camera": { 
+            "eye": [-1, 4, 6], 
+            "target": [0, 2, 0], 
+            "up": [0, 1, 0] 
+        },
+        "light": [
+            {
+                "pos": [4, 8, 4],
+                "intensity": [80, 80, 80]
+            }
+        ]
+    },
+    
+    "Astarion": {
+        "model": { 
+            "path": "obj/astarion.obj", 
+            "pos": [-0.15, 0, 0], 
+            "rot": [0, 0, 0],
+            "scale": [1, 1, 1],
+            "material": {
+                "diffuse_color": [1.0, 1.0, 1.0],
+                "ambient": [0.05, 0.05, 0.05],
+                "diffuse": [0.2, 0.3, 0.4],
+                "specular": [0.7937, 0.7937, 0.7937],
+                "shininess": 150.0,
+                "shader": "flat"
+            }
+        },
+        "camera": { 
+            "eye": [0, 0.5, 3.5], 
+            "target": [0, 0, 0], 
+            "up": [0, 1, 0] 
+        },
+        "light": [
+            {
+                "pos": [4, 8, 4],
+                "intensity": [200, 200, 200]
+            }
+        ]
+    }
+}
