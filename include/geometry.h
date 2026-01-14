@@ -24,7 +24,11 @@ template<int n> struct vec {
     float& operator[](const int i)       { assert(i>=0 && i<n); return data[i]; }
     float  operator[](const int i) const { assert(i>=0 && i<n); return data[i]; }
     float norm() const { return std::sqrt(dot_product(*this, *this)); }
-    vec<n> normalized() const { return *this / norm(); }
+    vec<n> normalized() const { 
+        float normal = norm();
+        if(normal < 1e-12) return vec<n>{};
+        return *this / normal; 
+    }
     vec<n> clamp(float min, float max) const {
         vec<n> ret = *this;
         for(int i = 0; i < n; i++) ret[i] = std::clamp(ret[i], min, max);
@@ -109,9 +113,13 @@ template<> struct vec<2> {
     }
     float& operator[](const int i)       { assert(i>=0 && i<2); return i ? y : x; }
     float  operator[](const int i) const { assert(i>=0 && i<2); return i ? y : x; }
-    float norm() const { return std::sqrt(x*x + y*y); }
-    vec<2> normalized() const { return vec<2>{x, y} / norm(); }
     vec<2> clamp(float min, float max) const { return vec<2>(std::clamp(x, min, max), std::clamp(y, min, max)); }
+    float norm() const { return std::sqrt(x*x + y*y); }
+    vec<2> normalized() const { 
+        float n = norm();
+        if(n < 1e-12) return vec<2>{0, 0};
+        return vec<2>{x, y} / n; 
+    }
 };
 
 template<> struct vec<3> {
@@ -125,9 +133,13 @@ template<> struct vec<3> {
     }
     float& operator[](const int i)       { assert(i>=0 && i<3); return i ? (1==i ? y : z) : x; }
     float  operator[](const int i) const { assert(i>=0 && i<3); return i ? (1==i ? y : z) : x; }
-    float norm() const { return std::sqrt(x*x + y*y + z*z); }
-    vec<3> normalized() const { return vec<3>{x, y, z} / norm(); }
     vec<3> clamp(float min, float max) const { return vec<3>(std::clamp(x, min, max), std::clamp(y, min, max), std::clamp(z, min, max)); }
+    float norm() const { return std::sqrt(x*x + y*y + z*z); }
+    vec<3> normalized() const {
+        float n = norm();
+        if(n < 1e-12) return vec<3>{0, 0, 0};
+        return vec<3>{x, y, z} / n; 
+    }
 };
 
 template<> struct vec<4> {
@@ -144,9 +156,13 @@ template<> struct vec<4> {
 
     vec<2> xy()  const { return {x, y}; }
     vec<3> xyz() const { return {x, y, z}; }
-    float norm() const { return std::sqrt(x*x + y*y + z*z + w*w); }
-    vec<4> normalized() const { return vec<4>{x, y, z, w} / norm(); }
     vec<4> clamp(float min, float max) const { return vec<4>(std::clamp(x, min, max), std::clamp(y, min, max), std::clamp(z, min, max), std::clamp(w, min, max)); }
+    float norm() const { return std::sqrt(x*x + y*y + z*z + w*w); }
+    vec<4> normalized() const { 
+        float n = norm();
+        if(n < 1e-12) return vec<4>{0, 0, 0, 0};
+        return vec<4>{x, y, z, w} / n; 
+    }
 };
 // <--- 定义vec2, vec3, vec4
 template<int m, int n> vec<m> embed(const vec<n> &v, float fill=0) {
@@ -155,6 +171,20 @@ template<int m, int n> vec<m> embed(const vec<n> &v, float fill=0) {
         // 如果原向量有这一维就复制，没有就填 fill
         ret[i] = (i<n ? v[i] : fill);
     }
+    return ret;
+}
+
+template<int n> 
+inline vec<n> min(const vec<n>& lhs, const vec<n>& rhs) {
+    vec<n> ret;
+    for(int i = 0; i < n; i++) ret[i] = std::min(lhs[i], rhs[i]);
+    return ret;
+}
+
+template<int n> 
+inline vec<n> max(const vec<n>& lhs, const vec<n>& rhs) {
+    vec<n> ret;
+    for(int i = 0; i < n; i++) ret[i] = std::max(lhs[i], rhs[i]);
     return ret;
 }
 
@@ -209,6 +239,18 @@ template<int n> struct mat {
         return MatInitializer<mat<n>, n>(*this, f);
     }
 
+    mat() = default;
+
+    template<typename... Args>
+    mat(Args... args) {
+        static_assert(sizeof...(args) == n, "Number of arguments must match matrix size");
+        
+        vec<n> vecs[] = { args... };
+        for (int i = 0; i < (int)sizeof...(args); i++) {
+            data[i] = vecs[i]; 
+        }
+    }
+
     float det() const {
         return dt<n>::det(*this);
     }
@@ -225,16 +267,16 @@ template<int n> struct mat {
     }
 
     mat<n> inverse_transpose() const {
-    float det = this->det();
-    assert(det != 0);
-    mat<n> ret;
-    for(int i = 0; i < n; i++) {
-        for(int j = 0; j < n; j++) {
-            ret[i][j] = cofactor(i, j) / det;
+        float det = this->det();
+        assert(det != 0);
+        mat<n> ret;
+        for(int i = 0; i < n; i++) {
+            for(int j = 0; j < n; j++) {
+                ret[i][j] = cofactor(i, j) / det;
+            }
         }
+        return ret;
     }
-    return ret;
-}
 
     mat<n> transpose() const {
         mat<n> ret;

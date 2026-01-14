@@ -24,18 +24,20 @@ Triangle &Triangle::set_world_pos(const int& ind, const vec3& p) {
     return *this;
 }
 
-Triangle &Triangle::set_normals(const std::array<vec3, 3>& normals) {
-    for(int i = 0; i < 3; i++) normal[i] = normals[i];
-    return *this;
-}
-
-Triangle& Triangle::set_colors(const std::array<vec3, 3>& colors) {
-    for(int i = 0; i < 3; i++) color[i] = colors[i];
-    return *this;
-}
-
 Triangle &Triangle::set_tex_coord(const int& ind, const vec2& uv) {
     assert(ind >= 0 && ind < 3);
     tex_coord[ind] = uv;
+    return *this;
+}
+
+Triangle &Triangle::set_tangent(const int& ind, const vec3& t) {
+    assert(ind >= 0 && ind < 3);
+    tangent[ind] = t;
+    return *this;
+}
+
+Triangle &Triangle::set_bitangent(const int& ind, const vec3& b) {
+    assert(ind >= 0 && ind < 3);
+    bitangent[ind] = b;
     return *this;
 }

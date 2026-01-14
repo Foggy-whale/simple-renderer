@@ -17,7 +17,13 @@ if(iwyu)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU|Intel")
-  add_compile_options(-Wall -O3)
+  # add_compile_options(-Wall)
+  add_compile_options(-w)
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_options(-g)
+  elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_compile_options(-O3)
+  endif()
 endif()
 
 find_package(OpenMP COMPONENTS CXX)
@@ -26,6 +32,10 @@ find_package(OpenCV REQUIRED)
 file(GLOB SOURCES "src/*.cpp")
 
 add_executable(${PROJECT_NAME} ${SOURCES})
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIG>"
+)
 
 target_include_directories(${PROJECT_NAME} PRIVATE 
     ${CMAKE_CURRENT_SOURCE_DIR}

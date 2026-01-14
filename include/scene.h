@@ -2,21 +2,22 @@
 #include <vector>
 #include <memory>
 #include "model.h"
+#include "light.h"
 #include "camera.h"
 #include "shader.h"
 
 class Scene {
 private:
     Camera activeCamera;
-    std::vector<Model> models;
     std::vector<Light> lights;
+    std::vector<Entity*> entities;
 public:
-    void add_model(Model m) { models.push_back(m); }
-    void add_light(Light l) { lights.push_back(l); }
     void set_camera(const Camera& c) { activeCamera = c; }
+    void add_light(const Light& l) { lights.push_back(std::move(l)); }
+    void add_entity(Entity* e) { entities.push_back(std::move(e)); }
     
     Camera& get_camera() { return activeCamera; }
     const Camera& get_camera() const { return activeCamera; }
-    const std::vector<Model>& get_models() const { return models; }
     const std::vector<Light>& get_lights() const { return lights; }
+    const std::vector<Entity*>& get_entities() const { return entities; }
 };

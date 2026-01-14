@@ -3,6 +3,8 @@
 #include "scene.h"
 #include "rasterizer.h"
 #include "shader.h"
+#include "texture.h"
+#include "model.h"
 #include "loader.h"
 #include "display.h"
 
@@ -30,21 +32,32 @@ int main(int argc, char** argv) {
     shaderManager->register_shader("flat", std::make_unique<FlatShader>());
     shaderManager->register_shader("phong", std::make_unique<PhongShader>());
     shaderManager->register_shader("gouraud", std::make_unique<GouraudShader>());
+    shaderManager->register_shader("normal", std::make_unique<NormalShader>());
+    shaderManager->register_shader("standard", std::make_unique<StandardShader>());
+    shaderManager->register_shader("eye", std::make_unique<EyeShader>());
+    
+    // Initialize other Managers
+    auto textureManager = std::make_unique<TextureManager>();
+    auto materialManager = std::make_unique<MaterialManager>();
+    auto modelManager = std::make_unique<ModelManager>();
+    auto entityManager = std::make_unique<EntityManager>();
     
     // Initialize Scene and Rasterizer
     Scene scene;
     Rasterizer r(width, height);
 
     std::cout << "--- Initializing Scene: " << scene_name << " ---" << std::endl;
+    Loader loader(config_path, scene_name);
     try {
-        if(!Loader::load(config_path, scene_name, scene, *shaderManager)) {
+        if(!loader.load(scene, shaderManager, textureManager, materialManager, modelManager, entityManager)) {
             std::cerr << "Failed to load scene: " << scene_name << std::endl;
             return -1;
         }
     } catch(const std::exception& e) {
-        std::cerr << "Critical Error during loading: " << e.what() << std::endl;
+        std::cerr << "CRitical Error during loading: " << e.what() << std::endl;
         return -1;
     }
+    r.bind_managers(modelManager, shaderManager, textureManager, materialManager);
     
     // Run selected mode 
     std::unique_ptr<IRenderMode> renderMode;

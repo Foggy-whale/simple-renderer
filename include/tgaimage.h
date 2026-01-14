@@ -4,6 +4,7 @@
 #include <vector>
 
 #pragma pack(push,1)
+
 struct TGAHeader {
     std::uint8_t  idlength = 0;
     std::uint8_t  colormaptype = 0;
@@ -23,13 +24,15 @@ struct TGAHeader {
 struct TGAColor {
     std::uint8_t bgra[4] = {0,0,0,0};
     std::uint8_t bytespp = 4;
+    const std::uint8_t& operator[](const int i) const { return bgra[i]; }
     std::uint8_t& operator[](const int i) { return bgra[i]; }
 };
 
 struct TGAImage {
     enum Format { GRAYSCALE=1, RGB=3, RGBA=4 };
     TGAImage() = default;
-    TGAImage(const int w, const int h, const int bpp);
+    TGAImage(const int w, const int h, const int bpp, TGAColor c = {});
+    TGAImage(const std::string filename) { read_tga_file(filename); } // additional
     bool  read_tga_file(const std::string filename);
     bool write_tga_file(const std::string filename, const bool vflip=true, const bool rle=true) const;
     void flip_horizontally();
@@ -38,7 +41,7 @@ struct TGAImage {
     void set(const int x, const int y, const TGAColor &c);
     int width()  const;
     int height() const;
-    std::uint8_t* buffer() { return data.data(); }
+    std::uint8_t* buffer() { return data.data(); } // additional
 private:
     bool   load_rle_data(std::ifstream &in);
     bool unload_rle_data(std::ofstream &out) const;
@@ -46,4 +49,3 @@ private:
     std::uint8_t bpp = 0;
     std::vector<std::uint8_t> data = {};
 };
-

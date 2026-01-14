@@ -46,34 +46,35 @@ public:
 void NormalMode::run(Rasterizer& r, Scene& scene) {
     r.enable_ssaa(3); 
 
-    std::cout << "--- Rendering Start :) ---" << std::endl;
+    std::cout << std::endl << "--- Rendering Start :) ---" << std::endl;
     std::string timestamp = get_current_timestamp() + ".tga";
     try {
         r.draw(scene); 
     } catch(const std::runtime_error& e) {
-        std::cout << "--- Rendering Failed! :< ---" << std::endl;
+        std::cout << std::endl << "--- Rendering Failed! :< ---" << std::endl;
         std::cerr << "Error: " << e.what() << std::endl;
         exit(-1);
     }
     r.save_as("output/framebuffer_" + timestamp); 
     r.save_zbuffer_as("output/zbuffer_" + timestamp); 
-    std::cout << "--- Rendering Completed! :> ---" << std::endl;
+    std::cout << std::endl << "--- Rendering Completed! :> ---" << std::endl;
 }
 
 void RotateMode::run(Rasterizer& r, Scene& scene) {
-    r.enable_ssaa(1); 
+    r.enable_ssaa(2); 
 
     Camera& camera = scene.get_camera();
     float angle = 0.0f; 
-    float radius = 6.1f; 
+    float ox = camera.get_eye().x, oy = camera.get_eye().y, oz = camera.get_eye().z;
+    float radius = std::sqrt(ox * ox + oz * oz); 
 
     std::cout << "Starting auto-rotation... Press ESC to exit." << std::endl; 
 
     while(true) { 
         float x = radius * std::sin(angle); 
         float z = radius * std::cos(angle); 
-        camera.set_eye({x, 4, z}).set_target({0, 2, 0}); 
-        scene.set_camera(camera); 
+        camera.set_eye({x, oy, z}); 
+        scene.set_camera(camera);
     
         r.clear(Buffers::Color | Buffers::Depth); 
         try {
@@ -84,7 +85,7 @@ void RotateMode::run(Rasterizer& r, Scene& scene) {
         }
 
         TGAImage tga = r.to_tga_image(Buffers::Color); 
-        cv::Mat image(height, width, CV_8UC3, tga.buffer()); 
+        cv::Mat image(height, width, CV_8UC4, tga.buffer()); 
         cv::flip(image, image, 0); 
         cv::imshow("TinyRenderer - Auto Rotate", image); 
 
@@ -140,7 +141,7 @@ void VisualMode::run(Rasterizer& r, Scene& scene) {
         }
 
         TGAImage tga = r.to_tga_image(Buffers::Color); 
-        cv::Mat image(height, width, CV_8UC3, tga.buffer()); 
+        cv::Mat image(height, width, CV_8UC4, tga.buffer()); 
         cv::flip(image, image, 0); 
         
         cv::imshow("TinyRenderer - Interactive", image); 

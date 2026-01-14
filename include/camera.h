@@ -1,18 +1,13 @@
 #pragma once
 #include "geometry.h"
+#include "global.h"
 
 class Camera {
 private:
-    vec3 eye, target, up;
-    float fov, aspect, zNear, zFar;
+    vec3 eye = {0, 0, 1}, target = {0, 0, 0}, up = {0, 1, 0};
+    float fov = 45.0f, aspect = (float)width / height, zNear = 0.1f, zFar = 100.f;
 public:
     Camera() = default;
-    Camera(vec3 eye, float fov, float aspect, float zNear, float zFar)
-        : eye(eye), target(eye + vec3(0, 0, 1)), up(vec3(0, 1, 0)), fov(fov), aspect(aspect), zNear(zNear), zFar(zFar) {}
-    Camera(vec3 eye, vec3 target, float fov, float aspect, float zNear, float zFar)
-        : eye(eye), target(target), up(vec3(0, 1, 0)), fov(fov), aspect(aspect), zNear(zNear), zFar(zFar) {}
-    Camera(vec3 eye, vec3 target, vec3 up, float fov, float aspect, float zNear, float zFar)
-        : eye(eye), target(target), up(up), fov(fov), aspect(aspect), zNear(zNear), zFar(zFar) {}
 
     Camera& set_eye(vec3 eye);
     Camera& set_target(vec3 target);

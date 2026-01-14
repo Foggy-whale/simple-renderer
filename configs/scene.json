@@ -1,77 +1,60 @@
 {
     "african_head": {
-        "model": {
-            "path": "obj/african_head", 
-            "pos": [0, 0, 0], 
-            "rot": [0, 0, 0],
-            "scale": [1, 1, 1],
-            "material": {
-                "diffuse_color": [1.0, 1.0, 1.0],
-                "ambient": [0.05, 0.05, 0.05],
-                "diffuse": [0.4, 0.3, 0.2],
-                "specular": [0.7937, 0.7937, 0.7937],
-                "shininess": 150.0,
-                "shader": "gouraud"
+        "models": {
+            "african_head": {
+                "path": "obj/african_head/",
+                "mesh": {
+                    "head": {
+                        "filename": "african_head.obj", 
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_NM_TANGENT_MAP", "USE_SPECULAR_MAP", "USE_DIFFUSE_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.3, 0.3, 0.3],
+                                "diffuse": [0.6, 0.6, 0.6],
+                                "specular": [0.7, 0.7, 0.7],
+                                "shininess": 150.0
+                            }
+                        }
+                    },
+                    "eye_inner": {
+                        "filename": "african_head_eye_inner.obj", 
+                        "material": {
+                            "shader": "standard",
+                            "feature":  ["USE_NM_TANGENT_MAP", "USE_SPECULAR_MAP", "USE_DIFFUSE_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.6, 0.6, 0.6],
+                                "diffuse": [0.7, 0.7, 0.7],
+                                "specular": [0.1, 0.1, 0.1],
+                                "shininess": 16.0
+                            }
+                        } 
+                    }, 
+                    "eye_outer": {
+                        "filename": "african_head_eye_outer.obj", 
+                        "material": {
+                            "shader": "eye",
+                            "feature":  ["USE_NM_TANGENT_MAP", "USE_DIFFUSE_MAP", "USE_SPECULAR_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.0, 0.0, 0.0],
+                                "diffuse": [0.05, 0.05, 0.05],
+                                "specular": [2.5, 2.5, 2.5],
+                                "shininess": 256.0
+                            }
+                        } 
+                    }
+                }
             }
         },
-        "camera": { 
-            "eye": [-2, 0, 2], 
-            "target": [0, 0, 0], 
-            "up": [0, 1, 0] 
-        },
-        "light": [
-            {
-                "pos": [4, 4, 4],
-                "intensity": [50, 50, 50]
-            },
-            {
-                "pos": [-4, 4, 0],
-                "intensity": [50, 50, 50]
-            }
-        ]
-    },
-
-    "diablo": {
-        "model": { 
-            "path": "obj/diablo3_pose", 
-            "pos": [0, 0, 0], 
-            "rot": [0, 0, 0],
-            "scale": [1, 1, 1],
-            "material": {
-                "diffuse_color": [1.0, 1.0, 1.0],
-                "ambient": [0.05, 0.05, 0.05],
-                "diffuse": [0.4, 0.3, 0.2],
-                "specular": [0.7937, 0.7937, 0.7937],
-                "shininess": 150.0,
-                "shader": "flat"
-            }
-        },
-        "camera": { 
-            "eye": [0, 0, 3], 
-            "target": [0, 0, 0], 
-            "up": [0, 1, 0] 
-        },
-        "light": [
-            {
-                "pos": [4, 8, 4],
-                "intensity": [200, 200, 200]
-            }
-        ]
-    },
-
-    "boggie": {
-        "model": { 
-            "path": "obj/boggie", 
-            "pos": [0, 0, 0], 
-            "rot": [0, 0, 0],
-            "scale": [1, 1, 1],
-            "material": {
-                "diffuse_color": [1.0, 1.0, 1.0],
-                "ambient": [0.05, 0.05, 0.05],
-                "diffuse": [0.4, 0.3, 0.2],
-                "specular": [0.7937, 0.7937, 0.7937],
-                "shininess": 150.0,
-                "shader": "flat"
+        "entity": {
+            "african_head_instance_1": {
+                "ref": "african_head",
+                "pos": [0, 0, 0], 
+                "rot": [0, 0, 0],
+                "scale": [1, 1, 1]
             }
         },
         "camera": { 
@@ -81,29 +64,151 @@
         },
         "light": [
             {
-                "pos": [4, 4, 4],
-                "intensity": [50, 50, 50]
-            },
-            {
-                "pos": [-4, 4, 0],
-                "intensity": [50, 50, 50]
+                "pos": [4, 8, 4],
+                "intensity": [200, 200, 200]
             }
         ]
     },
-
+    "diablo": {
+        "models": {
+            "diablo3_pose": {
+                "path": "obj/diablo3_pose/",
+                "mesh": {
+                    "diablo3_pose": {
+                        "filename": "diablo3_pose.obj",
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_NM_TANGENT_MAP", "USE_DIFFUSE_MAP", "USE_SPECULAR_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.25, 0.25, 0.25],
+                                "diffuse": [0.5, 0.5, 0.5],
+                                "specular": [0.4, 0.4, 0.4],
+                                "shininess": 150.0
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "entity": {
+           "diablo_instance_1": {
+               "ref": "diablo3_pose",
+               "pos": [0, 0, 0],
+               "rot": [0, 0, 0],
+               "scale": [1.0, 1.0, 1.0]
+           }
+        },
+        "camera": {
+            "eye": [0, 0, 2.5],
+            "target": [0, 0, 0],
+            "up": [0, 1, 0]
+        },
+        "light": [
+            {
+                "pos": [4, 8, 4],
+                "intensity": [375, 375, 375]
+            }
+        ]
+    },
+    "boggie": {
+        "models": {
+            "boggie": {
+                "path": "obj/boggie/",
+                "mesh": {
+                    "head": {
+                        "filename": "head.obj",
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_NORMAL_MAP", "USE_DIFFUSE_MAP", "USE_SPECULAR_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.1, 0.1, 0.1],
+                                "diffuse": [0.4, 0.4, 0.4],
+                                "specular": [0.9, 0.9, 0.9],
+                                "shininess": 35.0
+                            }
+                        }
+                    },
+                    "eyes": {
+                        "filename": "eyes.obj",
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_NORMAL_MAP", "USE_DIFFUSE_MAP", "USE_SPECULAR_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.1, 0.1, 0.1],
+                                "diffuse": [0.4, 0.4, 0.4],
+                                "specular": [0.9, 0.9, 0.9],
+                                "shininess": 35.0
+                            }
+                        },
+                        "body": {
+                            "filename": "body.obj",
+                            "material": {
+                                "shader": "standard",
+                                "feature": ["USE_NORMAL_MAP", "USE_DIFFUSE_MAP", "USE_SPECULAR_MAP"],
+                                "params": {
+                                    "diffuse_color": [1.0, 1.0, 1.0],
+                                    "ambient": [0.1, 0.1, 0.1],
+                                    "diffuse": [0.4, 0.4, 0.4],
+                                    "specular": [0.9, 0.9, 0.9],
+                                    "shininess": 35.0
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "entity": {
+            "boggie_instance_1": {
+                "ref": "boggie",
+                "pos": [0, 0, 0],
+                "rot": [0, 0, 0],
+                "scale": [1.0, 1.0, 1.0]
+            }
+        },
+        "camera": {
+            "eye": [0, 0, 3],
+            "target": [0, 0, 0],
+            "up": [0, 1, 0]
+        },
+        "light": [
+            {
+                "pos": [4, 4, 4],
+                "intensity": [100, 100, 100]
+            }
+        ]
+    },
     "Darius": {
-        "model": { 
-            "path": "obj/Darius", 
-            "pos": [0, 0, 0], 
-            "rot": [0, 0, 0],
-            "scale": [0.1, 0.1, 0.1],
-            "material": {
-                "diffuse_color": [1.0, 1.0, 1.0],
-                "ambient": [0.05, 0.05, 0.05],
-                "diffuse": [0.2, 0.3, 0.4],
-                "specular": [0.7937, 0.7937, 0.7937],
-                "shininess": 150.0,
-                "shader": "phong"
+        "models": { 
+            "Darius": {
+                "path": "obj/Darius/", 
+                "mesh": {
+                    "Darius": {
+                        "filename": "Darius.obj", 
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_DIFFUSE_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.5, 0.5, 0.5],
+                                "diffuse": [0.3, 0.3, 0.3],
+                                "specular": [0.2, 0.2, 0.2],
+                                "shininess": 35.0
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "entity": {
+            "Darius_instance_1": {
+                "ref": "Darius",
+                "pos": [0, 0, 0], 
+                "rot": [0, 0, 0],
+                "scale": [0.1, 0.1, 0.1]
             }
         },
         "camera": { 
@@ -113,36 +218,12 @@
         },
         "light": [
             {
-                "pos": [4, 8, 4],
-                "intensity": [80, 80, 80]
-            }
-        ]
-    },
-    
-    "Astarion": {
-        "model": { 
-            "path": "obj/astarion.obj", 
-            "pos": [-0.15, 0, 0], 
-            "rot": [0, 0, 0],
-            "scale": [1, 1, 1],
-            "material": {
-                "diffuse_color": [1.0, 1.0, 1.0],
-                "ambient": [0.05, 0.05, 0.05],
-                "diffuse": [0.2, 0.3, 0.4],
-                "specular": [0.7937, 0.7937, 0.7937],
-                "shininess": 150.0,
-                "shader": "flat"
-            }
-        },
-        "camera": { 
-            "eye": [0, 0.5, 3.5], 
-            "target": [0, 0, 0], 
-            "up": [0, 1, 0] 
-        },
-        "light": [
+                "pos": [4, 4, 4],
+                "intensity": [30, 30, 30]
+            },
             {
-                "pos": [4, 8, 4],
-                "intensity": [200, 200, 200]
+                "pos": [4, 4, -4],
+                "intensity": [30, 30, 30]
             }
         ]
     }
