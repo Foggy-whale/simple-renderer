@@ -226,5 +226,187 @@
                 "intensity": [30, 30, 30]
             }
         ]
+    },
+    "spot": {
+        "models": {
+            "spot": {
+                "path": "obj/spot/",
+                "mesh": {
+                    "spot": {
+                        "filename": "spot.obj",
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_DIFFUSE_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.1, 0.1, 0.1],
+                                "diffuse": [0.4, 0.4, 0.4],
+                                "specular": [0.15, 0.15, 0.15],
+                                "shininess": 150.0
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "entity": {
+            "spot_instance_1": {
+                "ref": "spot",
+                "pos": [0, 0, 0.1],
+                "rot": [0, 170, 0],
+                "scale": [1.0, 1.0, 1.0]
+            }
+        },
+        "camera": {
+            "eye": [1.5, 1.25, 3],
+            "target": [0, 0, 0],
+            "up": [0, 1, 0]
+        },
+        "light": [
+            {
+                "pos": [4, 4, 4],
+                "intensity": [100, 100, 100]
+            }
+        ]
+    },
+    "mario": {
+        "models": {
+            "mario": {
+                "path": "obj/mario/",
+                "mesh": {
+                    "body": {
+                        "filename": "body.obj",
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_DIFFUSE_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.3, 0.3, 0.3],
+                                "diffuse": [0.4, 0.4, 0.4],
+                                "specular": [0.15, 0.15, 0.15],
+                                "shininess": 35.0
+                            }
+                        }
+                    },
+                    "coverall": {
+                        "filename": "coverall.obj",
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_DIFFUSE_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.3, 0.3, 0.3],
+                                "diffuse": [0.4, 0.4, 0.4],
+                                "specular": [0.15, 0.15, 0.15],
+                                "shininess": 35.0
+                            }
+                        }
+                    },
+                    "eye": {
+                        "filename": "eye.obj",
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_DIFFUSE_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.3, 0.3, 0.3],
+                                "diffuse": [0.4, 0.4, 0.4],
+                                "specular": [0.15, 0.15, 0.15],
+                                "shininess": 35.0
+                            }
+                        }
+                    },
+                    "glove": {
+                        "filename": "glove.obj",
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_DIFFUSE_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.3, 0.3, 0.3],
+                                "diffuse": [0.4, 0.4, 0.4],
+                                "specular": [0.15, 0.15, 0.15],
+                                "shininess": 35.0
+                            }
+                        }
+                    },
+                    "hat": {
+                        "filename": "hat.obj",
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_DIFFUSE_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.3, 0.3, 0.3],
+                                "diffuse": [0.4, 0.4, 0.4],
+                                "specular": [0.15, 0.15, 0.15],
+                                "shininess": 35.0
+                            }
+                        }
+                    },
+                    "head":{
+                        "filename": "head.obj",
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_DIFFUSE_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.3, 0.3, 0.3],
+                                "diffuse": [0.4, 0.4, 0.4],
+                                "specular": [0.15, 0.15, 0.15],
+                                "shininess": 35.0
+                            }
+                        }
+                    },
+                    "mustache": {
+                        "filename": "mustache.obj",
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_DIFFUSE_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.3, 0.3, 0.3],
+                                "diffuse": [0.4, 0.4, 0.4],
+                                "specular": [0.15, 0.15, 0.15],
+                                "shininess": 35.0
+                            }
+                        }
+                    },
+                    "shoe": {
+                        "filename": "shoe.obj",
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_DIFFUSE_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.3, 0.3, 0.3],
+                                "diffuse": [0.4, 0.4, 0.4],
+                                "specular": [0.15, 0.15, 0.15],
+                                "shininess": 35.0
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "entity": {
+            "mario_instance_1": {
+                "ref": "mario",
+                "pos": [0, -0.55, 0],
+                "rot": [0, 0, 0],
+                "scale": [0.15, 0.15, 0.15]
+            }
+        },
+        "camera": {
+            "eye": [0, 0, 1.75],
+            "target": [0, 0, 0],
+            "up": [0, 1, 0]
+        },
+        "light": [
+            {
+                "pos": [4, 4, 4],
+                "intensity": [100, 100, 100]
+            }
+        ]
     }
 }

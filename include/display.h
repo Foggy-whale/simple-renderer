@@ -61,7 +61,7 @@ void NormalMode::run(Rasterizer& r, Scene& scene) {
 }
 
 void RotateMode::run(Rasterizer& r, Scene& scene) {
-    r.enable_ssaa(2); 
+    r.enable_ssaa(1); 
 
     Camera& camera = scene.get_camera();
     float angle = 0.0f; 
@@ -69,6 +69,8 @@ void RotateMode::run(Rasterizer& r, Scene& scene) {
     float radius = std::sqrt(ox * ox + oz * oz); 
 
     std::cout << "Starting auto-rotation... Press ESC to exit." << std::endl; 
+    auto last = std::chrono::steady_clock::now();
+    int frames = 0;
 
     while(true) { 
         float x = radius * std::sin(angle); 
@@ -95,6 +97,15 @@ void RotateMode::run(Rasterizer& r, Scene& scene) {
         if(key == 27) break; 
         if(paused) continue; 
         angle += 0.03f; 
+        frames++;
+        auto now = std::chrono::steady_clock::now();
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - last).count();
+        if(ms >= 1000) {
+            double fps = frames * 1000.0 / ms;
+            std::cout << "FPS: " << std::fixed << std::setprecision(1) << fps << std::endl;
+            last = now;
+            frames = 0;
+        }
     } 
 }
 

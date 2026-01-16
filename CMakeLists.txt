@@ -26,7 +26,8 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU|Intel")
   endif()
 endif()
 
-find_package(OpenMP COMPONENTS CXX)
+# find_package(OpenMP COMPONENTS CXX)
+find_package(OpenMP COMPONENTS CXX REQUIRED)
 find_package(OpenCV REQUIRED)
 
 file(GLOB SOURCES "src/*.cpp")

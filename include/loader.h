@@ -6,6 +6,7 @@
 #include "shader.h"
 #include "texture.h"
 #include "rasterizer.h"
+#include <filesystem>
 
 using json = nlohmann::json;
 
@@ -123,14 +124,21 @@ private:
 
         /* 加载纹理 */
         std::string tex_prefix = obj_path.substr(0, obj_path.find_last_of('.'));
+        auto choose_tex = [&](const std::string& suffix)->std::string {
+            std::string tga = tex_prefix + suffix + ".tga";
+            std::string png = tex_prefix + suffix + ".png";
+            if(std::filesystem::exists(tga)) return tga;
+            if(std::filesystem::exists(png)) return png;
+            return "";
+        };
         if(mtl.features & Material::USE_DIFFUSE_MAP) 
-            mtl.diffuse_tex_id = texMgr->load_texture(tex_prefix + "_diffuse.tga");
+            mtl.diffuse_tex_id = texMgr->load_texture(choose_tex("_diffuse"));
         if(mtl.features & Material::USE_NORMAL_MAP) 
-            mtl.normal_tex_id = texMgr->load_texture(tex_prefix + "_nm.tga");
+            mtl.normal_tex_id = texMgr->load_texture(choose_tex("_nm"));
         if(mtl.features & Material::USE_SPECULAR_MAP) 
-            mtl.specular_tex_id = texMgr->load_texture(tex_prefix + "_spec.tga");
+            mtl.specular_tex_id = texMgr->load_texture(choose_tex("_spec"));
         if(mtl.features & Material::USE_NM_TANGENT_MAP) 
-            mtl.nm_tangent_tex_id = texMgr->load_texture(tex_prefix + "_nm_tangent.tga");
+            mtl.nm_tangent_tex_id = texMgr->load_texture(choose_tex("_nm_tangent"));
 
         /* 绑定材质 */
         int mtl_id = matMgr->add_material(mtl);

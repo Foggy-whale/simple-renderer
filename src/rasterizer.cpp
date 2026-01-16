@@ -2,9 +2,21 @@
 #include <any>
 #include "rasterizer.h"
 
+/* ======== 静态辅助接口部分 ======== */
 template <typename T>
 static T interpolate(float alpha, float beta, float gamma, const T& a, const T& b, const T& c) {
     return a * alpha + b * beta + c * gamma;
+}
+
+template<typename T>
+static T get_avg(int ind, int ssaa, const std::vector<T>& buffer_data) {
+    int sample_factor = ssaa * ssaa;
+    T sum{}; 
+    for(int i = 0; i < sample_factor; i++) {
+        sum = sum + buffer_data[ind * sample_factor + i];
+    }
+    T avg = sum / (float)sample_factor;
+    return avg;
 }
 
 static float signed_triangle_area(vec4 v1, vec4 v2, vec4 v3) {
@@ -16,6 +28,30 @@ static std::pair<vec2, vec2> find_bounding_box(vec4 v1, vec4 v2, vec4 v3) {
     vec2 max = vec2(std::max({v1.x, v2.x, v3.x}), std::max({v1.y, v2.y, v3.y}));
     return {min, max};
 }
+
+static void assembly_triangle(std::array<Vertex, 3>& verts, Triangle& t) {
+    for(int i = 0; i < 3; i++) {
+        vec4 v = verts[i].pos;
+
+        // Perspective Division
+        v.x /= v.w, v.y /= v.w, v.z /= v.w;
+        
+        // Viewport Transform
+        v.x = (v.x + 1.f) * 0.5f * width;
+        v.y = (v.y + 1.f) * 0.5f * height;
+        v.z = (1.f - v.z) * 0.5f;
+
+        // Batch Assembly Attributes
+        t.set_vertex(i, v);
+        t.set_color(i, verts[i].color);
+        t.set_world_pos(i, verts[i].world_pos);
+        t.set_normal(i, verts[i].normal);
+        t.set_tex_coord(i, verts[i].uv);
+        t.set_tangent(i, verts[i].tangent);
+        t.set_bitangent(i, verts[i].bitangent);
+    }
+}
+/* ======== 静态辅助接口部分 ======== */
 
 void Rasterizer::draw_line(vec2 v1, vec2 v2, TGAColor color) {
     float x1_s = v1.x * ssaa, y1_s = v1.y * ssaa;
@@ -53,28 +89,31 @@ void Rasterizer::draw_line(vec2 v1, vec2 v2, TGAColor color) {
     }
 }
 
-void Rasterizer::draw_triangle(const Triangle& triangle) {
+void Rasterizer::draw_triangle(const Triangle& triangle, const vec2& tri_min, const vec2& tri_max, const Tile& tile) {
     vec4 v1 = triangle.v[0], v2 = triangle.v[1], v3 = triangle.v[2];
-    float total_area = signed_triangle_area(v1, v2, v3);
-    if (std::abs(total_area) < 1e-5) return;
-
-    // Construct vertices from Triangle data for interpolation
-    Vertex vert1, vert2, vert3;
-    vert1.pos = v1; vert1.color = triangle.color[0]; vert1.normal = triangle.normal[0]; vert1.uv = triangle.tex_coord[0]; vert1.world_pos = triangle.world_pos[0]; vert1.tangent = triangle.tangent[0]; vert1.bitangent = triangle.bitangent[0];
-    vert2.pos = v2; vert2.color = triangle.color[1]; vert2.normal = triangle.normal[1]; vert2.uv = triangle.tex_coord[1]; vert2.world_pos = triangle.world_pos[1]; vert2.tangent = triangle.tangent[1]; vert2.bitangent = triangle.bitangent[1];
-    vert3.pos = v3; vert3.color = triangle.color[2]; vert3.normal = triangle.normal[2]; vert3.uv = triangle.tex_coord[2]; vert3.world_pos = triangle.world_pos[2]; vert3.tangent = triangle.tangent[2]; vert3.bitangent = triangle.bitangent[2];
-
-    float inv_total_area = 1.f / total_area;
-    auto [min, max] = find_bounding_box(v1, v2, v3);
     
-    int min_x = std::max(0, (int)min.x);
-    int max_x = std::min(width - 1, (int)max.x);
-    int min_y = std::max(0, (int)min.y);
-    int max_y = std::min(height - 1, (int)max.y);
+    // Back-Face Culling
+    float total_area = signed_triangle_area(v1, v2, v3);
+    if(total_area < 1e-5) return;
+    
+    // 性能小trick: 化除法为乘法
+    float inv_total_area = 1.f / total_area; 
+    float inv_w1 = 1.f / v1.w, inv_w2 = 1.f / v2.w, inv_w3 = 1.f / v3.w;
+    
+    // Scissor Test
+    int min_x = std::max((int)tile.x_start, (int)std::floor(tri_min.x));
+    int max_x = std::min((int)tile.x_start + TILE_SIZE - 1, (int)std::ceil(tri_max.x));
+    int min_y = std::max((int)tile.y_start, (int)std::floor(tri_min.y));
+    int max_y = std::min((int)tile.y_start + TILE_SIZE - 1, (int)std::ceil(tri_max.y));
 
-    #pragma omp parallel for
-    for (int x = min_x; x <= max_x; x++) {
-        for (int y = min_y; y <= max_y; y++) {
+    // 使用 clamp 保证边界安全
+    min_x = std::clamp(min_x, 0, width - 1);
+    max_x = std::clamp(max_x, 0, width - 1);
+    min_y = std::clamp(min_y, 0, height - 1);
+    max_y = std::clamp(max_y, 0, height - 1);
+
+    for(int x = min_x; x <= max_x; x++) {
+        for(int y = min_y; y <= max_y; y++) {
             for(int si = 0; si < ssaa; si++) {
                 for(int sj = 0; sj < ssaa; sj++) {
                     float x_sample = x + si * 1.f / ssaa + 0.5f / ssaa;
@@ -83,28 +122,25 @@ void Rasterizer::draw_triangle(const Triangle& triangle) {
                     float alpha = signed_triangle_area(vec4(x_sample, y_sample, 0, 1), v2, v3) * inv_total_area;
                     float beta = signed_triangle_area(vec4(x_sample, y_sample, 0, 1), v3, v1) * inv_total_area;
                     float gamma = 1.f - alpha - beta;
-                    if (alpha < 0 || beta < 0 || gamma < 0) continue;
+                    if (alpha < 0 || beta < 0 || gamma < 0) continue; // 判定采样点是否在三角形内部
 
                     // Perspective-Correct Interpolation
-                    float w_reciprocal = 1.f / (alpha / v1.w + beta / v2.w + gamma / v3.w);
-                    float alpha_pc = alpha * (w_reciprocal / v1.w);
-                    float beta_pc = beta * (w_reciprocal / v2.w);
-                    float gamma_pc = gamma * (w_reciprocal / v3.w);
+                    // 经过数学推导，深度的倒数符合线性插值关系：1 / w = 1 / w1 * alpha + 1 / w2 * beta + 1 / w3 * gamma
+                    // 同样可以推导出，矫正后的系数分别为：alpha_pc = alpha * (w / w1), beta_pc = beta * (w / w2), gamma_pc = gamma * (w / w3)
+                    float w = 1.f / (inv_w1 * alpha + inv_w2 * beta + inv_w3 * gamma);
+                    float alpha_pc = alpha * w * inv_w1;
+                    float beta_pc = beta * w * inv_w2;
+                    float gamma_pc = gamma * w * inv_w3;
                     
                     float z = interpolate(alpha_pc, beta_pc, gamma_pc, v1.z, v2.z, v3.z);
                     int ind = (x + y * width) * ssaa * ssaa + sj * ssaa + si;
                     if(z <= get_depth(ind)) continue; // 深度测试
                     
-                    /* 计算插值后的顶点属性 */
-                    Vertex interpolated;
-                    interpolated.pos = {x_sample, y_sample, z, 1.0f}; 
-                    interpolated.color = interpolate(alpha_pc, beta_pc, gamma_pc, vert1.color, vert2.color, vert3.color);
-                    interpolated.normal = interpolate(alpha_pc, beta_pc, gamma_pc, vert1.normal, vert2.normal, vert3.normal).normalized();
-                    interpolated.uv = interpolate(alpha_pc, beta_pc, gamma_pc, vert1.uv, vert2.uv, vert3.uv);
-                    interpolated.world_pos = interpolate(alpha_pc, beta_pc, gamma_pc, vert1.world_pos, vert2.world_pos, vert3.world_pos);
-                    interpolated.tangent = interpolate(alpha_pc, beta_pc, gamma_pc, vert1.tangent, vert2.tangent, vert3.tangent);
-                    interpolated.bitangent = interpolate(alpha_pc, beta_pc, gamma_pc, vert1.bitangent, vert2.bitangent, vert3.bitangent);
+                    // 顶点属性插值
+                    Vertex interpolated = Vertex::lerp(alpha_pc, beta_pc, gamma_pc, triangle);
+                    interpolated.pos = {x_sample, y_sample, z, 1.0f};
                     
+                    // 调用片段着色器处理当前像素
                     vec4 rgba;
                     bool discard = currentShader->fragment(interpolated, rgba);
 
@@ -119,68 +155,62 @@ void Rasterizer::draw_triangle(const Triangle& triangle) {
 }
 
 void Rasterizer::draw_mesh(const Mesh& mesh) {
-    for (int j = 0; j < mesh.facet_vrt.size(); j++) {
+    // 清理现有的 Tile 索引列表
+    for(auto& tile : tiles) {
+        tile.triangle_indices.clear(); 
+    }
+
+    // 缓存所有三角形的数据，避免重复计算
+    struct TriangleCache {
         Triangle t;
+        vec2 min_xy, max_xy;
+    };
+    std::vector<TriangleCache> mesh_triangles(mesh.facet_vrt.size());
 
+    // 为并行计算预处理装箱
+    for(int i = 0; i < mesh.facet_vrt.size(); i++) {
+        std::array<Vertex, 3> verts;
+        
         // 委托顶点着色器处理每个顶点，获取处理后的顶点数据（Clip空间）
-        Vertex v0_vert = currentShader->vertex(mesh, j, 0);
-        Vertex v1_vert = currentShader->vertex(mesh, j, 1);
-        Vertex v2_vert = currentShader->vertex(mesh, j, 2);
+        verts[0] = currentShader->vertex(mesh, i, 0);
+        verts[1] = currentShader->vertex(mesh, i, 1);
+        verts[2] = currentShader->vertex(mesh, i, 2);
+        
+        // 将处理好的顶点装配成三角形
+        Triangle t;
+        assembly_triangle(verts, t);
 
-        vec4 v0 = v0_vert.pos;
-        vec4 v1 = v1_vert.pos;
-        vec4 v2 = v2_vert.pos;
-        
-        auto perspective_divide = [](vec4& v) {
-            v.x /= v.w;
-            v.y /= v.w;
-            v.z /= v.w;
-        };
-        perspective_divide(v0);
-        perspective_divide(v1);
-        perspective_divide(v2);
-        
-        auto viewport_transform = [&](vec4& v) {
-            v.x = (v.x + 1.f) * 0.5f * width;
-            v.y = (v.y + 1.f) * 0.5f * height;
-            v.z = (1.f - v.z) * 0.5f;
-        };
-        viewport_transform(v0);
-        viewport_transform(v1);
-        viewport_transform(v2);
+        // 计算三角形的包围盒
+        auto [min, max] = find_bounding_box(t.v[0], t.v[1], t.v[2]);
 
-        t.set_vertex(0, v0);
-        t.set_vertex(1, v1);
-        t.set_vertex(2, v2);
+        // 将三角形缓存到 mesh_triangles 中
+        mesh_triangles[i].t = t;
+        mesh_triangles[i].min_xy = min, mesh_triangles[i].max_xy = max;
         
-        t.set_color(0, v0_vert.color);
-        t.set_color(1, v1_vert.color);
-        t.set_color(2, v2_vert.color);
-        
-        t.set_world_pos(0, v0_vert.world_pos);
-        t.set_world_pos(1, v1_vert.world_pos);
-        t.set_world_pos(2, v2_vert.world_pos);
+        // 计算影响了哪些 Tile
+        int t_min_x = std::clamp((int)std::floor(min.x / TILE_SIZE), 0, tiles_x - 1);
+        int t_max_x = std::clamp((int)std::ceil(max.x / TILE_SIZE), 0, tiles_x - 1);
+        int t_min_y = std::clamp((int)std::floor(min.y / TILE_SIZE), 0, tiles_y - 1);
+        int t_max_y = std::clamp((int)std::ceil(max.y / TILE_SIZE), 0, tiles_y - 1);
 
-        t.set_normal(0, v0_vert.normal);
-        t.set_normal(1, v1_vert.normal);
-        t.set_normal(2, v2_vert.normal);
+        // Bin-Packing 策略
+        for(int ty = t_min_y; ty <= t_max_y; ty++) {
+            for(int tx = t_min_x; tx <= t_max_x; tx++) {
+                tiles[ty * tiles_x + tx].triangle_indices.push_back(i);
+            }
+        }
+    }
+
+    // 按照 Tile 并行渲染
+    #pragma omp parallel for schedule(dynamic)
+    for (int i = 0; i < tiles.size(); i++) {
+        if (tiles[i].triangle_indices.empty()) continue;
         
-        t.set_tex_coord(0, v0_vert.uv);
-        t.set_tex_coord(1, v1_vert.uv);
-        t.set_tex_coord(2, v2_vert.uv);
-        
-        t.set_tangent(0, v0_vert.tangent);
-        t.set_tangent(1, v1_vert.tangent);
-        t.set_tangent(2, v2_vert.tangent);
-        
-        t.set_bitangent(0, v0_vert.bitangent);
-        t.set_bitangent(1, v1_vert.bitangent);
-        t.set_bitangent(2, v2_vert.bitangent);  
-        
-        draw_triangle(t);
+        for (int tri_idx : tiles[i].triangle_indices) {
+            draw_triangle(mesh_triangles[tri_idx].t, mesh_triangles[tri_idx].min_xy, mesh_triangles[tri_idx].max_xy, tiles[i]);
+        }
     }
 }
-
 
 void Rasterizer::draw_entity(const Entity* e) {
     Model* m = modelMgr->get_model(e->get_model_id());
@@ -222,24 +252,14 @@ void Rasterizer::draw(const Scene& scene) {
     for(auto e : scene.get_entities()) draw_entity(e);
 }
 
-template<typename T>
-inline T Rasterizer::get_avg(const int& ind, const std::vector<T>& buffer_data) {
-    int sample_factor = ssaa * ssaa;
-    T sum{}; 
-    for(int i = 0; i < sample_factor; i++) {
-        sum = sum + buffer_data[ind * sample_factor + i];
-    }
-    T avg = sum / (float)sample_factor;
-    return avg;
-}
-
 TGAImage Rasterizer::to_tga_image(Buffers buffer) {
     TGAImage img;
     switch(buffer) {
         case Buffers::Color: {
             img = TGAImage(width, height, TGAImage::RGBA);
+            // #pragma omp parallel for schedule(static)
             for(int i = 0; i < width * height; i++) {
-                vec4 avg = get_avg(i, framebuffer).clamp(0.0f, 1.0f);
+                vec4 avg = get_avg(i, ssaa, framebuffer).clamp(0.0f, 1.0f);
                 img.set(i % width, i / width, {static_cast<uint8_t>(avg.z * 255), 
                                                static_cast<uint8_t>(avg.y * 255), 
                                                static_cast<uint8_t>(avg.x * 255), 
@@ -249,8 +269,9 @@ TGAImage Rasterizer::to_tga_image(Buffers buffer) {
         }
         case Buffers::Depth: {
             img = TGAImage(width, height, TGAImage::GRAYSCALE);
+            // #pragma omp parallel for schedule(static)
             for(int i = 0; i < width * height; i++) {
-                float avg = std::clamp(get_avg(i, zbuffer), 0.0f, 1.0f);
+                float avg = std::clamp(get_avg(i, ssaa, zbuffer), 0.0f, 1.0f);
                 img.set(i % width, i / width, {static_cast<uint8_t>(avg * 255)});
             }
             break;
@@ -258,7 +279,6 @@ TGAImage Rasterizer::to_tga_image(Buffers buffer) {
     }
     return img;
 }
-
 
 void Rasterizer::save_as(const std::string &filename) {
     TGAImage img = to_tga_image(Buffers::Color);
@@ -278,6 +298,7 @@ void Rasterizer::save_zbuffer_as(const std::string& filename) {
         if(zbuffer[i] > max_depth) max_depth = zbuffer[i];
     }
 
+    #pragma omp parallel for schedule(static)
     for(int i = 0; i < width * height; i++) {
         float sum_depth = 0;
         int count = 0;

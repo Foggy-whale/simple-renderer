@@ -1,0 +1,16 @@
+newmtl body
+map_Kd ../textures/body_diffuse.tga
+newmtl head
+map_Kd ../textures/head_diffuse.tga
+newmtl hat
+map_Kd ../textures/hat_diffuse.tga
+newmtl mustache
+map_Kd ../textures/mustache_diffuse.tga
+newmtl eye_outer
+map_Kd ../textures/eye_outer_diffuse.tga
+newmtl eye_inner
+map_Kd ../textures/eye_inner_diffuse.tga
+newmtl glove
+map_Kd ../textures/glove_diffuse.tga
+newmtl shoe
+map_Kd ../textures/shoe_diffuse.tga

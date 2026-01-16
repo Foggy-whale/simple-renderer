@@ -17,8 +17,20 @@ inline Buffers operator&(Buffers a, Buffers b) {
     return Buffers((int)a & (int)b);
 }
 
+/* Tile-Based 并行优化策略 */
+const int TILE_SIZE = 32;
+const int tiles_x = (width + TILE_SIZE - 1) / TILE_SIZE;
+const int tiles_y = (height + TILE_SIZE - 1) / TILE_SIZE;
+
+struct Tile {
+    int x_start, y_start;
+    std::vector<int> triangle_indices; // 该 Tile 覆盖的三角形索引
+};
+
 class Rasterizer {
 private:
+    std::vector<Tile> tiles; // 所有 Tile 信息
+
     /* 渲染参数 */
     int width, height;
     int ssaa = 1;
@@ -38,6 +50,12 @@ public:
     Rasterizer(int width, int height) : width(width), height(height) {
         framebuffer.resize(width * height, vec4(0, 0, 0, 1.f));
         zbuffer.resize(width * height);
+
+        tiles.resize(tiles_x * tiles_y);
+        for(int i = 0; i < tiles.size(); i++) {
+            tiles[i].x_start = (i % tiles_x) * TILE_SIZE;
+            tiles[i].y_start = (i / tiles_x) * TILE_SIZE;
+        }
     }
     ~Rasterizer() = default;
 
@@ -92,9 +110,7 @@ private:
      * 4. 绘制实体
      */
     void draw_line(vec2 v1, vec2 v2, TGAColor color);
-    void draw_triangle(const Triangle& triangle);
+    void draw_triangle(const Triangle& triangle, const vec2& tri_min, const vec2& tri_max, const Tile& tile);
     void draw_mesh(const Mesh& mesh);
     void draw_entity(const Entity* e);
-
-    template<typename T> inline T get_avg(const int& ind, const std::vector<T>& buffer_data);
 };

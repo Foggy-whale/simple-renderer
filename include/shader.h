@@ -3,6 +3,7 @@
 #include <map>
 #include <memory>
 #include "geometry.h"
+#include "triangle.h"
 #include "model.h"
 #include "light.h"
 #include "global.h"
@@ -18,6 +19,21 @@ struct Vertex {
     vec3 tangent;
     vec3 bitangent;
     vec3 normal;
+    
+    // 静态辅助接口：对 Vertex 属性进行插值
+    // 注意：pos 比较特殊，不在这里做插值
+    static Vertex lerp(float alpha, float beta, float gamma, const Triangle& t) {
+        Vertex v;
+
+        v.color     = t.color[0] * alpha     + t.color[1] * beta     + t.color[2] * gamma;
+        v.uv        = t.tex_coord[0] * alpha + t.tex_coord[1] * beta + t.tex_coord[2] * gamma;
+        v.world_pos = t.world_pos[0] * alpha + t.world_pos[1] * beta + t.world_pos[2] * gamma;
+        v.normal    = (t.normal[0] * alpha   + t.normal[1] * beta    + t.normal[2] * gamma).normalized();
+        v.tangent   = (t.tangent[0] * alpha   + t.tangent[1] * beta   + t.tangent[2] * gamma).normalized();
+        v.bitangent = (t.bitangent[0] * alpha + t.bitangent[1] * beta + t.bitangent[2] * gamma).normalized();
+
+        return v;
+    }
 };
 
 /* 定义ShaderContext结构体，用于分离Shader的上下文和方法 */
