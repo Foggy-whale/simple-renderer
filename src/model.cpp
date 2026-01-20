@@ -129,3 +129,15 @@ mat4 Entity::get_matrix() const {
     model = translate * rotateX * rotateY * rotateZ * scale;
     return model;
 }
+
+void Model::align_to_bottom() {
+    float offset_y = min_pos.y;
+    for (auto& mesh : meshes) {
+        for (auto& v : mesh.verts) {
+            v.y -= offset_y; // 将最低点移至 Y=0
+        }
+    }
+    // 更新包围盒
+    max_pos.y -= offset_y;
+    min_pos.y = 0;
+}

@@ -408,5 +408,378 @@
                 "intensity": [100, 100, 100]
             }
         ]
+    },
+    "floor": {
+        "models": {
+            "floor": {
+                "path": "obj/floor/",
+                "mesh": {
+                    "floor": {
+                        "filename": "floor.obj",
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_DIFFUSE_MAP", "USE_NM_TANGENT_MAP", "USE_SPECULAR_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.3, 0.3, 0.3],
+                                "diffuse": [0.4, 0.4, 0.4],
+                                "specular": [0.15, 0.15, 0.15],
+                                "shininess": 35.0
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "entity": {
+            "floor_instance_1": {
+                "ref": "floor",
+                "pos": [0, -0.1, 0],
+                "rot": [0, 0, 0],
+                "scale": [1.0, 1.0, 1.0]
+            }
+        },
+        "camera": {
+            "eye": [0, 0, 1.75],
+            "target": [0, 0, 0],
+            "up": [0, 1, 0]
+        },
+        "light": [
+            {
+                "pos": [4, 4, 4],
+                "intensity": [100, 100, 100]
+            }
+        ]
+    },
+    "shadow_test1": {
+        "models": {
+            "african_head": {
+                "path": "obj/african_head/",
+                "mesh": {
+                    "head": {
+                        "filename": "african_head.obj", 
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_NM_TANGENT_MAP", "USE_SPECULAR_MAP", "USE_DIFFUSE_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.3, 0.3, 0.3],
+                                "diffuse": [0.6, 0.6, 0.6],
+                                "specular": [0.7, 0.7, 0.7],
+                                "shininess": 150.0
+                            }
+                        }
+                    },
+                    "eye_inner": {
+                        "filename": "african_head_eye_inner.obj", 
+                        "material": {
+                            "shader": "standard",
+                            "feature":  ["USE_NM_TANGENT_MAP", "USE_SPECULAR_MAP", "USE_DIFFUSE_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.6, 0.6, 0.6],
+                                "diffuse": [0.7, 0.7, 0.7],
+                                "specular": [0.1, 0.1, 0.1],
+                                "shininess": 16.0
+                            }
+                        } 
+                    }, 
+                    "eye_outer": {
+                        "filename": "african_head_eye_outer.obj", 
+                        "material": {
+                            "shader": "eye",
+                            "feature":  ["USE_NM_TANGENT_MAP", "USE_DIFFUSE_MAP", "USE_SPECULAR_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.0, 0.0, 0.0],
+                                "diffuse": [0.05, 0.05, 0.05],
+                                "specular": [2.5, 2.5, 2.5],
+                                "shininess": 256.0
+                            }
+                        } 
+                    }
+                }
+            },
+            "floor": {
+                "path": "obj/floor/",
+                "mesh": {
+                    "floor": {
+                        "filename": "floor.obj",
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_DIFFUSE_MAP", "USE_NM_TANGENT_MAP", "USE_SPECULAR_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.3, 0.3, 0.3],
+                                "diffuse": [0.4, 0.4, 0.4],
+                                "specular": [0.15, 0.15, 0.15],
+                                "shininess": 35.0
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "entity": {
+            "african_head_instance_1": {
+                "ref": "african_head",
+                "pos": [0, 0, 0], 
+                "rot": [0, 0, 0],
+                "scale": [0.4, 0.4, 0.4]
+            },
+            "floor_instance_1": {
+                "ref": "floor",
+                "pos": [0, 0, 0],
+                "rot": [0, 0, 0],
+                "scale": [1, 1, 1]
+            }
+        },
+        "camera": { 
+            "eye": [-1, 1, 2.5], 
+            "target": [0, 0, 0], 
+            "up": [0, 1, 0] 
+        },
+        "light": [
+            {
+                "pos": [3, 3, 3],
+                "intensity": [75, 75, 75]
+            }
+        ] 
+    },
+    "shadow_test2": {
+        "models": {
+            "diablo3_pose": {
+                "path": "obj/diablo3_pose/",
+                "mesh": {
+                    "diablo3_pose": {
+                        "filename": "diablo3_pose.obj", 
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_NM_TANGENT_MAP", "USE_SPECULAR_MAP", "USE_DIFFUSE_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.3, 0.3, 0.3],
+                                "diffuse": [0.6, 0.6, 0.6],
+                                "specular": [0.7, 0.7, 0.7],
+                                "shininess": 150.0
+                            }
+                        }
+                    }
+                }
+            },
+            "floor": {
+                "path": "obj/floor/",
+                "mesh": {
+                    "floor": {
+                        "filename": "floor.obj",
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_DIFFUSE_MAP", "USE_NM_TANGENT_MAP", "USE_SPECULAR_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.3, 0.3, 0.3],
+                                "diffuse": [0.4, 0.4, 0.4],
+                                "specular": [0.15, 0.15, 0.15],
+                                "shininess": 35.0
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "entity": {
+            "diablo3_pose_instance_1": {
+                "ref": "diablo3_pose",
+                "pos": [0, 0, 0.3], 
+                "rot": [0, 0, 0],
+                "scale": [0.4, 0.4, 0.4]
+            },
+            "floor_instance_1": {
+                "ref": "floor",
+                "pos": [0, 0, 0],
+                "rot": [0, 0, 0],
+                "scale": [1, 1, 1]
+            }
+        },
+        "camera": { 
+            "eye": [-1, 1, 2.5], 
+            "target": [0, 0, 0], 
+            "up": [0, 1, 0] 
+        },
+        "light": [
+            {
+                "pos": [3, 3, 3],
+                "intensity": [75, 75, 75]
+            }
+        ] 
+    },
+    "shadow_test3": {
+        "models": {
+            "mario": {
+                "path": "obj/mario/",
+                "mesh": {
+                    "body": {
+                        "filename": "body.obj",
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_DIFFUSE_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.3, 0.3, 0.3],
+                                "diffuse": [0.4, 0.4, 0.4],
+                                "specular": [0.15, 0.15, 0.15],
+                                "shininess": 35.0
+                            }
+                        }
+                    },
+                    "coverall": {
+                        "filename": "coverall.obj",
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_DIFFUSE_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.3, 0.3, 0.3],
+                                "diffuse": [0.4, 0.4, 0.4],
+                                "specular": [0.15, 0.15, 0.15],
+                                "shininess": 35.0
+                            }
+                        }
+                    },
+                    "eye": {
+                        "filename": "eye.obj",
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_DIFFUSE_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.3, 0.3, 0.3],
+                                "diffuse": [0.4, 0.4, 0.4],
+                                "specular": [0.15, 0.15, 0.15],
+                                "shininess": 35.0
+                            }
+                        }
+                    },
+                    "glove": {
+                        "filename": "glove.obj",
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_DIFFUSE_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.3, 0.3, 0.3],
+                                "diffuse": [0.4, 0.4, 0.4],
+                                "specular": [0.15, 0.15, 0.15],
+                                "shininess": 35.0
+                            }
+                        }
+                    },
+                    "hat": {
+                        "filename": "hat.obj",
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_DIFFUSE_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.3, 0.3, 0.3],
+                                "diffuse": [0.4, 0.4, 0.4],
+                                "specular": [0.15, 0.15, 0.15],
+                                "shininess": 35.0
+                            }
+                        }
+                    },
+                    "head":{
+                        "filename": "head.obj",
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_DIFFUSE_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.3, 0.3, 0.3],
+                                "diffuse": [0.4, 0.4, 0.4],
+                                "specular": [0.15, 0.15, 0.15],
+                                "shininess": 35.0
+                            }
+                        }
+                    },
+                    "mustache": {
+                        "filename": "mustache.obj",
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_DIFFUSE_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.3, 0.3, 0.3],
+                                "diffuse": [0.4, 0.4, 0.4],
+                                "specular": [0.15, 0.15, 0.15],
+                                "shininess": 35.0
+                            }
+                        }
+                    },
+                    "shoe": {
+                        "filename": "shoe.obj",
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_DIFFUSE_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.3, 0.3, 0.3],
+                                "diffuse": [0.4, 0.4, 0.4],
+                                "specular": [0.15, 0.15, 0.15],
+                                "shininess": 35.0
+                            }
+                        }
+                    }
+                }
+            },
+            "floor": {
+                "path": "obj/floor/",
+                "mesh": {
+                    "floor": {
+                        "filename": "floor.obj",
+                        "material": {
+                            "shader": "standard",
+                            "feature": ["USE_DIFFUSE_MAP", "USE_NM_TANGENT_MAP", "USE_SPECULAR_MAP"],
+                            "params": {
+                                "diffuse_color": [1.0, 1.0, 1.0],
+                                "ambient": [0.3, 0.3, 0.3],
+                                "diffuse": [0.4, 0.4, 0.4],
+                                "specular": [0.15, 0.15, 0.15],
+                                "shininess": 35.0
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "entity": {
+            "mario_instance_1": {
+                "ref": "mario",
+                "pos": [0, 0, 0],
+                "rot": [0, 0, 0],
+                "scale": [0.15, 0.15, 0.15]
+            },
+            "floor_instance_1": {
+                "ref": "floor",
+                "pos": [0, 0, 0],
+                "rot": [0, 0, 0],
+                "scale": [1, 1, 1]
+            }
+        },
+        "camera": { 
+            "eye": [-1, 1, 2.5], 
+            "target": [0, 0, 0], 
+            "up": [0, 1, 0] 
+        },
+        "light": [
+            {
+                "pos": [3, 3, 3],
+                "intensity": [20, 20, 20]
+            },
+            {
+                "pos": [0, 3, -3],
+                "intensity": [20, 20, 20]
+            }
+        ] 
     }
 }

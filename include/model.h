@@ -36,6 +36,7 @@ public:
     const Mesh& mesh(int i) const { return meshes[i]; }
 
     void add_mesh(const Mesh& m) { meshes.push_back(std::move(m)); }
+    void align_to_bottom();
 };
 
 class ModelManager {

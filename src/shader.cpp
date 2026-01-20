@@ -30,13 +30,23 @@ vec3 IShader::get_specular_color(const vec2& uv) const {
 vec3 IShader::compute_lighting(const vec3& point, const vec3& normal, const vec3& diffuse_color, const vec3& specular_color, const vec3& ka, const vec3& kd, const vec3& ks, float p) {
     vec3 result_color = {0, 0, 0};
     
-    for (const auto& light : *context->lights) {
+    for(int light_idx = 0; light_idx < context->lights->size(); light_idx++) {
+        const auto& light = (*context->lights)[light_idx];
+
+        // 计算光照方向和半程向量
         vec3 l = (light.position - point).normalized();
-        vec3 v_dir = (context->eye_pos - point).normalized();
-        vec3 h = (l + v_dir).normalized();
+        vec3 v = (context->eye_pos - point).normalized();
+        vec3 h = (l + v).normalized();
         float r_sq = (light.position - point).norm();
         r_sq = r_sq * r_sq;
         
+        // 计算阴影可见性
+        float shadow_visibility = 1.0f;
+        if(context->shadow_strategy) {
+            shadow_visibility = context->shadow_strategy->calculate_shadow(light_idx, point, normal, context);
+        }
+
+        // 计算光照强度
         vec3 I = light.intensity;
 
         vec3 La = ka * diffuse_color;
@@ -47,7 +57,7 @@ vec3 IShader::compute_lighting(const vec3& point, const vec3& normal, const vec3
         float spec = std::pow(std::max(0.f, dot_product(normal, h)), p);
         vec3 Ls = ks * I / r_sq * spec * specular_color;
         
-        result_color += La + Ld + Ls;
+        result_color += La + (Ld + Ls) * shadow_visibility;
     }
     
     return result_color;
@@ -313,4 +323,72 @@ bool EyeShader::fragment(const Vertex& v, vec4& rgba) {
     rgba = embed<4>(color, diffuse_color.w);
 
     return false;
+}
+
+Vertex DepthShader::vertex(const Mesh &mesh, int iface, int nthvert) {
+    Vertex v;
+
+    // 只做 MVP 变换，不考虑光照模型
+    vec3 vertex_pos = mesh.verts[mesh.facet_vrt[iface][nthvert]];
+    v.pos = context->mvp * embed<4>(vertex_pos, 1.f);
+
+    return v;
+}
+
+bool DepthShader::fragment(const Vertex& v, vec4& rgba) {
+    return false; // 仅写入深度，丢弃像素颜色
+}
+
+float HardShadowStrategy::calculate_shadow(int light_idx, const vec3 &world_pos, const vec3 &normal, const ShaderContext *context) {
+    // 正面剔除对 Shadow Acne 以及 Peter Panning 效果很好，因此不用再做 Depth Bias
+    const auto& sd = context->shadow_datas[light_idx];
+    const auto& light = (*context->lights)[light_idx];
+
+    vec4 light_space_pos = sd.light_vp * embed<4>(world_pos, 1.f);
+    vec3 proj = light_space_pos.xyz() / light_space_pos.w;
+    vec2 uv = vec2(proj.x + 1.f, proj.y + 1.f) * 0.5f;
+    float z_screen = (1.f - proj.z) * 0.5f; // Reverse-Z 映射
+
+    return (z_screen < sample_buffer(sd.buffer, uv)) ? 0.0f : 1.0f;
+}
+
+float PCSSShadowStrategy::calculate_shadow(int light_idx, const vec3& world_pos, const vec3 &normal, const ShaderContext* context) {
+    const auto& sd = context->shadow_datas[light_idx];
+    const auto& light = (*context->lights)[light_idx];
+
+    vec4 light_space_pos = sd.light_vp * embed<4>(world_pos, 1.f);
+    vec3 proj = light_space_pos.xyz() / light_space_pos.w;
+    vec2 uv = vec2(proj.x + 1.f, proj.y + 1.f) * 0.5f;
+    float z_screen = (1.f - proj.z) * 0.5f; // Reverse-Z 映射
+
+    // Blocker Search
+    float avg_blocker_depth = 0;
+    int blocker_count = 0;
+    float search_radius = 0.01f; // 搜索半径
+
+    for(int i = 0; i < 16; i++) {
+        float z_sample = sample_buffer_bilinear(sd.buffer, uv + poisson_disk[i] * search_radius);
+        if(z_screen < z_sample) { 
+            avg_blocker_depth += z_sample;
+            blocker_count++;
+        }
+    }
+    if(!blocker_count) return 1.0f;
+    avg_blocker_depth /= (float)blocker_count;
+
+    // Penumbra Estimation
+    // float w_light = 0.012f; 
+    float w_light = 0.025f;
+    float penumbra_radius = (avg_blocker_depth - z_screen) / avg_blocker_depth * w_light;
+    // penumbra_radius = std::clamp(penumbra_radius, 0.0001f, 0.04f);
+    penumbra_radius = std::clamp(penumbra_radius, 0.0005f, 0.02f);
+
+    // Filtering
+    float visibility = 0.0f;
+    for(int i = 0; i < 16; i++) {
+        float z_sample = sample_buffer_bilinear(sd.buffer, uv + poisson_disk[i] * penumbra_radius);
+        visibility += (z_screen < z_sample) ? 0.0f : 1.0f;
+    }
+
+    return visibility / 16.0f;
 }

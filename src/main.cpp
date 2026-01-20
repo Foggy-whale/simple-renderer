@@ -35,6 +35,7 @@ int main(int argc, char** argv) {
     shaderManager->register_shader("normal", std::make_unique<NormalShader>());
     shaderManager->register_shader("standard", std::make_unique<StandardShader>());
     shaderManager->register_shader("eye", std::make_unique<EyeShader>());
+    shaderManager->register_shader("depth_only", std::make_unique<DepthShader>());
     
     // Initialize other Managers
     auto textureManager = std::make_unique<TextureManager>();

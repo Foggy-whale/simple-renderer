@@ -36,6 +36,14 @@ struct Vertex {
     }
 };
 
+/* 定义ShadowMapData结构体，用于存储阴影贴图数据 */
+struct ShadowMapData {
+    std::vector<float> buffer; // 深度缓冲区
+    mat4 light_vp;           // 光源 View-Projection 矩阵
+};
+
+class IShadowStrategy; // 前向声明阴影策略接口
+
 /* 定义ShaderContext结构体，用于分离Shader的上下文和方法 */
 struct ShaderContext {
     /* 全局参数 */
@@ -43,6 +51,10 @@ struct ShaderContext {
     vec3 eye_pos;
     TextureManager* texMgr;
     const std::vector<Light>* lights;
+
+    /* 阴影贴图数据 */
+    std::vector<ShadowMapData> shadow_datas;
+    std::unique_ptr<IShadowStrategy> shadow_strategy; // 注入阴影算法
 
     /* 模型参数 */
     mat4 model;
@@ -122,4 +134,59 @@ class StandardShader : public IShader {
 class EyeShader : public IShader {
     Vertex vertex(const Mesh& mesh, int iface, int nthvert) override;
     bool fragment(const Vertex& v, vec4& rgba) override;
+};
+
+class DepthShader : public IShader {
+    Vertex vertex(const Mesh& mesh, int iface, int nthvert) override;
+    bool fragment(const Vertex& v, vec4& rgba) override;
+};
+
+/* 定义IShadowStrategy抽象类，用于阴影计算 */
+class IShadowStrategy {
+protected:
+    float sample_buffer(const std::vector<float>& buffer, vec2 uv) {
+        int x = std::clamp((int)(uv.x * sm_width), 0, sm_width - 1);
+        int y = std::clamp((int)(uv.y * sm_height), 0, sm_height - 1);
+        float val = buffer[x + y * sm_width];
+        return val;
+    }
+    float sample_buffer_bilinear(const std::vector<float>& buffer, vec2 uv) {
+        float u = uv.x * (sm_width - 1);
+        float v = uv.y * (sm_height - 1);
+
+        int x0 = (int)std::floor(u);
+        int y0 = (int)std::floor(v);
+        int x1 = std::clamp(x0 + 1, 0, sm_width - 1);
+        int y1 = std::clamp(y0 + 1, 0, sm_height - 1);
+
+        float s = u - x0;
+        float t = v - y0;
+
+        float d00 = buffer[x0 + y0 * sm_width];
+        float d10 = buffer[x1 + y0 * sm_width];
+        float d01 = buffer[x0 + y1 * sm_width];
+        float d11 = buffer[x1 + y1 * sm_width];
+
+        float lerp_top = d00 + s * (d10 - d00);
+        float lerp_bottom = d01 + s * (d11 - d01);
+        
+        return lerp_top + t * (lerp_bottom - lerp_top);
+    }
+public:
+    virtual ~IShadowStrategy() = default;
+
+    // 返回值 0.0~1.0，表示光照强度系数
+    virtual float calculate_shadow(int light_idx, const vec3& world_pos, const vec3 &normal, const ShaderContext* context) = 0;
+};
+
+/* 定义HardShadowStrategy类，用于硬阴影计算 */
+class HardShadowStrategy : public IShadowStrategy {
+public:
+    float calculate_shadow(int light_idx, const vec3& world_pos, const vec3 &normal, const ShaderContext* context) override;
+};
+
+// 高级阴影：PCSS (为后续实现预留)
+class PCSSShadowStrategy : public IShadowStrategy {
+public:
+    float calculate_shadow(int light_idx, const vec3& world_pos, const vec3 &normal, const ShaderContext* context) override;
 };

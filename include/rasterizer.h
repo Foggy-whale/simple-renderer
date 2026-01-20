@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 #include "tgaimage.h"
 #include "geometry.h"
 #include "triangle.h"
@@ -113,4 +114,10 @@ private:
     void draw_triangle(const Triangle& triangle, const vec2& tri_min, const vec2& tri_max, const Tile& tile);
     void draw_mesh(const Mesh& mesh);
     void draw_entity(const Entity* e);
+
+    /* 阴影贴图渲染 */
+    void render_shadow_maps(const Scene& scene);
+    void execute_depth_pass(const Scene& scene, ShadowMapData& sd);
+    void draw_mesh_depth_only(const Mesh& mesh, std::vector<float>& depth_buffer);
+    void draw_triangle_depth(const std::array<vec4, 3>& v, std::vector<float>& shadow_buffer);
 };

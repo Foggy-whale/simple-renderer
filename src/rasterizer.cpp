@@ -53,6 +53,7 @@ static void assembly_triangle(std::array<Vertex, 3>& verts, Triangle& t) {
 }
 /* ======== 静态辅助接口部分 ======== */
 
+/* ======== 正常 Pass 绘制接口部分 ======== */
 void Rasterizer::draw_line(vec2 v1, vec2 v2, TGAColor color) {
     float x1_s = v1.x * ssaa, y1_s = v1.y * ssaa;
     float x2_s = v2.x * ssaa, y2_s = v2.y * ssaa;
@@ -132,7 +133,7 @@ void Rasterizer::draw_triangle(const Triangle& triangle, const vec2& tri_min, co
                     float beta_pc = beta * w * inv_w2;
                     float gamma_pc = gamma * w * inv_w3;
                     
-                    float z = interpolate(alpha_pc, beta_pc, gamma_pc, v1.z, v2.z, v3.z);
+                    float z = interpolate(alpha, beta, gamma, v1.z, v2.z, v3.z);
                     int ind = (x + y * width) * ssaa * ssaa + sj * ssaa + si;
                     if(z <= get_depth(ind)) continue; // 深度测试
                     
@@ -236,21 +237,134 @@ void Rasterizer::draw_entity(const Entity* e) {
         draw_mesh(mesh);
     }
 }
+/* ======== 正常 Pass 绘制接口部分 ======== */
+
+/* ======== 深度 Pass 绘制接口部分 ======== */
+void Rasterizer::draw_triangle_depth(const std::array<vec4, 3>& v, std::vector<float>& shadow_buffer) {
+    // Front-Face Culling
+    float total_area = signed_triangle_area(v[0], v[1], v[2]);
+    if(total_area > -1e-5) return;
+
+    // 性能小trick: 化除法为乘法
+    float inv_total_area = 1.0f / total_area;
+    float inv_w1 = 1.f / v[0].w, inv_w2 = 1.f / v[1].w, inv_w3 = 1.f / v[2].w;
+
+    // 计算 AABB 包围盒
+    auto [min, max] = find_bounding_box(v[0], v[1], v[2]);
+    int min_x = std::clamp((int)std::floor(min.x), 0, sm_width - 1);
+    int max_x = std::clamp((int)std::ceil(max.x), 0, sm_width - 1);
+    int min_y = std::clamp((int)std::floor(min.y), 0, sm_height - 1);
+    int max_y = std::clamp((int)std::ceil(max.y), 0, sm_height - 1);
+
+    // 3. 遍历 AABB 包围盒内的所有像素，不处理 SSAA
+    for(int x = min_x; x <= max_x; x++) {
+        for(int y = min_y; y <= max_y; y++) {
+            // 采样点设为像素中心
+            float px = x + 0.5f;
+            float py = y + 0.5f;
+
+            // 计算重心坐标
+            float alpha = signed_triangle_area(vec4(px, py, 0, 1), v[1], v[2]) * inv_total_area;
+            float beta  = signed_triangle_area(vec4(px, py, 0, 1), v[2], v[0]) * inv_total_area;
+            float gamma = 1.0f - alpha - beta;
+            if(alpha < 0 || beta < 0 || gamma < 0) continue; // 判定采样点是否在三角形内部
+            
+            // 计算透视矫正后的重心坐标
+            float w = 1.f / (inv_w1 * alpha + inv_w2 * beta + inv_w3 * gamma);
+            float alpha_pc = alpha * w * inv_w1;
+            float beta_pc = beta * w * inv_w2;
+            float gamma_pc = gamma * w * inv_w3;
+                    
+            float z = interpolate(alpha_pc, beta_pc, gamma_pc, v[0].z, v[1].z, v[2].z);
+            
+            int ind = x + y * sm_width;
+            if(z <= shadow_buffer[ind]) continue; // 深度测试
+            shadow_buffer[ind] = z;
+        }
+    }
+}
+
+void Rasterizer::draw_mesh_depth_only(const Mesh& mesh, std::vector<float>& depth_buffer) {
+    for (int i = 0; i < mesh.facet_vrt.size(); i++) {
+        std::array<vec4, 3> verts;
+
+        // 仅变换顶点位置
+        verts[0] = currentShader->vertex(mesh, i, 0).pos;
+        verts[1] = currentShader->vertex(mesh, i, 1).pos;
+        verts[2] = currentShader->vertex(mesh, i, 2).pos;
+
+        // Perspective Division & Viewport Transform
+        for(auto& v : verts) {
+            v.x /= v.w; v.y /= v.w; v.z /= v.w;
+            v.x = (v.x + 1.f) * 0.5f * sm_width;
+            v.y = (v.y + 1.f) * 0.5f * sm_height;
+            v.z = (1.f - v.z) * 0.5f;
+        }
+
+        draw_triangle_depth(verts, depth_buffer);
+    }
+}
+
+void Rasterizer::execute_depth_pass(const Scene &scene, ShadowMapData &sd) {
+    // 临时替换当前的 VP 矩阵为光源的 VP
+    mat4 old_vp = context.vp;
+    context.vp = sd.light_vp;
+    
+    for(auto e : scene.get_entities()) {
+        Model* m = modelMgr->get_model(e->get_model_id());
+        context.model = e->get_matrix();
+        context.mvp = context.vp * context.model;
+
+        for(int i = 0; i < m->nmeshes(); i++) {
+            const Mesh& mesh = m->mesh(i);
+            draw_mesh_depth_only(mesh, sd.buffer);
+        }
+    }
+    
+    context.vp = old_vp; // 还原
+}
+
+void Rasterizer::render_shadow_maps(const Scene &scene) {
+    context.shadow_datas.clear();
+    const auto& lights = scene.get_lights();
+
+    // #pragma omp parallel for
+    for(int i = 0; i < lights.size(); i++) {
+        ShadowMapData sd;
+        sd.buffer.resize(sm_width * sm_height, 0.0f);
+        
+        Camera light_camera;
+        light_camera.set_eye(lights[i].position)
+                    .set_target({0, 0, 0})
+                    .set_up({0, 1, 0})
+                    .set_projection(90.f, (float)sm_width / sm_height, zNear, zFar);
+        sd.light_vp = light_camera.get_projection_matrix() * light_camera.get_view_matrix();
+
+        // 执行深度 Pass
+        execute_depth_pass(scene, sd);
+        context.shadow_datas.push_back(std::move(sd));
+    }
+}
+/* ======== 深度 Pass 绘制接口部分 ======== */
 
 void Rasterizer::draw(const Scene& scene) {
-    /* 导入相机参数 */
+    // Pass 1: 生成光源深度图
+    currentShader = shaderMgr->get_shader("depth_only");
+    currentShader->bind_context(&context);
+    render_shadow_maps(scene);
+
+    // 设置通用渲染上下文
     const Camera& camera = scene.get_camera();
     context.eye_pos = camera.get_eye();
     context.vp = camera.get_projection_matrix() * camera.get_view_matrix();
-
-    /* 导入场景中的所有光源（通过指针引用，避免拷贝）*/
     context.lights = &scene.get_lights();
-
-    /* 导入纹理管理器 */
     context.texMgr = texMgr;
+    context.shadow_strategy = std::make_unique<PCSSShadowStrategy>();
 
+    // Pass 2: 正常渲染
     for(auto e : scene.get_entities()) draw_entity(e);
 }
+
 
 TGAImage Rasterizer::to_tga_image(Buffers buffer) {
     TGAImage img;

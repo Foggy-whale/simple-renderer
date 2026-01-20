@@ -1,12 +1,13 @@
 #pragma once
 #include <fstream>
+#include <filesystem>
 #include "nlohmann/json.hpp"
+#include "global.h"
 #include "model.h"
 #include "scene.h"
 #include "shader.h"
 #include "texture.h"
 #include "rasterizer.h"
-#include <filesystem>
 
 using json = nlohmann::json;
 
@@ -88,7 +89,7 @@ private:
             camera.set_eye({c_cfg["eye"][0], c_cfg["eye"][1], c_cfg["eye"][2]})
                   .set_target({c_cfg["target"][0], c_cfg["target"][1], c_cfg["target"][2]})
                   .set_up({c_cfg["up"][0], c_cfg["up"][1], c_cfg["up"][2]})
-                  .set_projection(45.0f, (float)width / height, 0.1f, 100.0f); 
+                  .set_projection(45.0f, (float)width / height, zNear, zFar); 
             scene.set_camera(camera);
         } else {
             std::cerr << "Camera configuration is missing." << std::endl;
@@ -165,6 +166,9 @@ private:
                         load_single_mesh(mesh_cfg, base_path, model_id, modelMgr, matMgr, texMgr);
                     }
                 }
+                modelMgr->get_model(model_id)->align_to_bottom();
+                std::cout << "Model aligned to bottom: " << base_path << " (ID: " << model_id << ")" << std::endl;
+
                 std::cout << "Model loaded: " << base_path << " (ID: " << model_id << ")" << std::endl;
             }
         } else {

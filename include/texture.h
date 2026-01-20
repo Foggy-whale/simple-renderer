@@ -15,7 +15,7 @@ struct Texture {
     Interpolation mode;       // NEAREST, BILINEAR
     WrapMode wrap;            // REPEAT, CLAMP, MIRROR
 
-    Texture(const std::string filename, Interpolation m = Interpolation::NEAREST, WrapMode w = WrapMode::REPEAT) 
+    Texture(const std::string filename, Interpolation m = Interpolation::BILINEAR, WrapMode w = WrapMode::REPEAT) 
         : data(new TGAImage(filename.c_str())), mode(m), wrap(w) {
             data->flip_vertically();
         }
@@ -57,7 +57,7 @@ struct MaterialParameters {
 
 struct Material {
     MaterialParameters params;
-    std::string shader_id = "phong"; // 默认使用 phong 着色器
+    std::string shader_id = "standard"; // 默认使用 standard 着色器
 
     /* decouple material, texture*/ 
     int diffuse_tex_id = -1; 
